@@ -8,12 +8,15 @@
 
 using SolidWorks.Interop.swpublished;
 using SolidWorks.Interop.sldworks;
+using SolidWorks.Interop.swconst;
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using SolidWorks.Interop.swconst;
 
 
 namespace Gustafson.SolidWorks.TaskpaneAddIns {
@@ -25,7 +28,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
     public class CopyStatesAddInSetup : ISwAddin {
         #region SolidWorks Members
 
-        //private int mySolidWorksCookie;
         private TaskpaneView mySolidWorksTaskPane;
         private SldWorks mySolidWorks;
 
@@ -130,15 +132,39 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
     }
 
 
-    
+
 
 
     /**
      * For the dialog box that pops-up
+     *
+     * https://bit.ly/3A3tpQe //Get Display State Names and Visibilities of Components Example
+     * https://bit.ly/2TX5npx //Get List of Configurations Example
      */
     internal class CopyDisplayStatesForm : Form {
+        public SldWorks mySolidWorks;
+        private Configuration[] configList;
+        private ModelDoc2 currentDoc;
+
         public CopyDisplayStatesForm() {
             InitializeComponent();
+
+            /*Getting Configurations of the active document*/
+            currentDoc = (ModelDoc2) mySolidWorks.ActiveDoc; //the current document (file) open in SolidWorks
+            configList = null;
+
+            if (currentDoc.GetType() == (int)swDocumentTypes_e.swDocASSEMBLY) {
+                string[] listOfConfigNames = (string[]) currentDoc.GetConfigurationNames();
+                configList = new Configuration[listOfConfigNames.Length];
+                int index = -1;
+                foreach (string configName in listOfConfigNames) {
+                    configList[++index] = (Configuration) currentDoc.GetConfigurationByName(configName);
+                    fromConfigComboBox.Items.Add(configName);
+                    toConfigComboBox.Items.Add(configName);
+                }
+            } else {
+                throw new ApplicationException("Extension can only be used with Assemblies");
+            }
         }
 
         /// <summary>
@@ -229,7 +255,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.Controls.Add(this.fromConfigComboBox);
             this.Controls.Add(this.fromConfigLabel);
             this.Font = new System.Drawing.Font("Times New Roman", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            //this.Icon = ((System.Drawing.Icon) (resources.GetObject("$this.Icon")));
             this.Name = "CopyDisplayStatesForm";
             this.Text = "Copy Display States";
             this.ResumeLayout(false);
@@ -250,7 +275,9 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ButtonClicked(object sender, EventArgs e) {
-            throw new System.NotImplementedException();
+            Configuration from = (Configuration) currentDoc.GetConfigurationByName(fromConfigComboBox.SelectedItem.ToString());
+            Configuration to = (Configuration)currentDoc.GetConfigurationByName(toConfigComboBox.SelectedItem.ToString());
+            string[] 
         }
     }
 }
