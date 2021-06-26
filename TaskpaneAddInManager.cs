@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Gustafson.SolidWorks.TaskpaneAddIns;
 
 namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
