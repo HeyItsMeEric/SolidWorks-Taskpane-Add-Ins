@@ -23,6 +23,8 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             InitializeComponent();
         }
 
+        
+
 
         /// <summary> 
         /// Required designer variable.
@@ -48,31 +50,46 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// </summary>
         private void InitializeComponent() {
             this.TaskpaneCopyDisplayStatesButton = new System.Windows.Forms.Button();
+            this.CDSBArtist = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // TaskpaneCopyDisplayStatesButton
             // 
-            this.TaskpaneCopyDisplayStatesButton.Location = new System.Drawing.Point(9, 12);
+            this.TaskpaneCopyDisplayStatesButton.Location = new System.Drawing.Point(15, 10);
+            this.TaskpaneCopyDisplayStatesButton.Margin = new System.Windows.Forms.Padding(2);
             this.TaskpaneCopyDisplayStatesButton.Name = "TaskpaneCopyDisplayStatesButton";
-            this.TaskpaneCopyDisplayStatesButton.Size = new System.Drawing.Size(157, 57);
+            this.TaskpaneCopyDisplayStatesButton.Size = new System.Drawing.Size(118, 46);
             this.TaskpaneCopyDisplayStatesButton.TabIndex = 0;
             this.TaskpaneCopyDisplayStatesButton.Text = "Copy Display States";
             this.TaskpaneCopyDisplayStatesButton.UseVisualStyleBackColor = true;
             this.TaskpaneCopyDisplayStatesButton.Click += new System.EventHandler(this.CopyDisplayStatesButtonClicked);
             // 
-            // TaskpaneIntegration
+            // CDSBArtist
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.CDSBArtist.AutoSize = true;
+            this.CDSBArtist.Location = new System.Drawing.Point(3, 58);
+            this.CDSBArtist.Name = "CDSBArtist";
+            this.CDSBArtist.Size = new System.Drawing.Size(130, 13);
+            this.CDSBArtist.TabIndex = 1;
+            this.CDSBArtist.Text = "Created by Eric Gustafson";
+            // 
+            // TaskpaneAddInManager
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.CDSBArtist);
             this.Controls.Add(this.TaskpaneCopyDisplayStatesButton);
-            this.Name = "TaskpaneIntegration";
-            this.Size = new System.Drawing.Size(444, 811);
+            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Name = "TaskpaneAddInManager";
+            this.Size = new System.Drawing.Size(333, 659);
             this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         private System.Windows.Forms.Button TaskpaneCopyDisplayStatesButton;
         private System.Windows.Forms.Button copyDisplayStateButton;
-
+        private Label CDSBArtist;
         #endregion
 
         /// <summary>
@@ -84,15 +101,23 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             //Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             //Application.SetCompatibleTextRenderingDefault(false);
-            
+            StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\DebugOutput.txt");
+            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
+            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
+            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
+            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
             try {
+                debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
                 Application.Run(new CopyDisplayStatesForm());
             } catch (Exception ex) {
-                TaskpaneExtensionsAddIn.debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
+                debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
+            } finally {
+                debugger.Close();
             }
 
-            //TaskpaneExtensionsAddIn.debugger.Close();
+
         }
+
     }
 
 
@@ -125,7 +150,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
         private TaskpaneView mySolidWorksTaskPane;
         public static SldWorks mySolidWorks { get; set; }
-        public static StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\DebugOutput.txt");
 
         private TaskpaneAddInManager manager;
         private readonly string PROGID = $@"{typeof(TaskpaneExtensionsAddIn).Namespace}";
@@ -142,7 +166,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         public bool ConnectToSW(object thisSw, int cookie) {
             //For debugging
             /*
-            StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\DebugOutput.txt");
+            StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New output text.txt");
             debugger.WriteLine($"{DateTime.Now}: 1");
             */
             mySolidWorks = (SldWorks)thisSw;
@@ -151,8 +175,8 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             Application.SetCompatibleTextRenderingDefault(false); //Must be set before the first IWin32Window object (WinForms object) is created, which is the next line.
             mySolidWorksTaskPane = mySolidWorks.CreateTaskpaneView2($@"{System.Reflection.Assembly.GetExecutingAssembly().Location.Replace("Gustafson.SolidWorks.TaskpaneAddIns.dll", "")}\\..\\..\\Images\\SW Custom Add-in Taskpane Icon.png", "Custom SolidWorks Add-Ins");
             manager = (TaskpaneAddInManager)mySolidWorksTaskPane.AddControl(PROGID, string.Empty);
-            //debugger.WriteLine($"{DateTime.Now}: 2");
-            //debugger.Close(); //for debugging
+           /* debugger.WriteLine($"{DateTime.Now}: 2");
+            debugger.Close(); //for debugging*/
             return true; //success
         }
 
