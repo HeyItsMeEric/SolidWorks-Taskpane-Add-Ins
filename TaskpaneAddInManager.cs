@@ -134,7 +134,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         #endregion
 
         /// <summary>
-        ///   
+        ///   Called when SolidWorks loads the Add-In
         /// </summary>
         /// <param name="thisSw"> Instance of the SolidWorks Application </param>
         /// <param name="cookie"></param>
@@ -156,7 +156,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             return true; //success
         }
 
-
+        
         public bool DisconnectFromSW() {
             mySolidWorksTaskPane.DeleteView();
             Marshal.ReleaseComObject(mySolidWorksTaskPane);
