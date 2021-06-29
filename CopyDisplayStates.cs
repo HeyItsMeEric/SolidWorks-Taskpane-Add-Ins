@@ -6,26 +6,19 @@
  * @version       1.0
  */
 
-using SolidWorks.Interop.swpublished;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Security;
 
-using System.Runtime.InteropServices;
-using Exception = System.Exception;
-
-
 namespace Gustafson.SolidWorks.TaskpaneAddIns {
     /**
-     * For the dialog box that pops-up
-     *
-     * https://bit.ly/3A3tpQe //Get Display State Names and Visibilities of Components Example
-     * https://bit.ly/2TX5npx //Get List of Configurations Example
+     * The dialog box that pops-up
      */
     internal class CopyDisplayStatesForm : Form {
         //Win Form instance variables
@@ -38,25 +31,14 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         private Configuration[] pastedConfigArr;
         private ModelDoc2 copiedDoc;
         private ModelDoc2 pastedDoc;
-        
 
-
+        /// <summary>
+        /// Initializes the Win Form GUI
+        /// </summary>
         public CopyDisplayStatesForm() {
             copiedFilePath = null;
             pastedFilePath = null;
             InitializeComponent();
-            //StreamWriter debugger = TaskpaneExtensionsAddIn.debugger;
-            #region Debug stuff
-
-
-           /* try {
-                debugger.WriteLine($"{DateTime.Now}: {TaskpaneExtensionsAddIn.mySolidWorks.ToString()}");
-            } catch (Exception e) {
-                debugger.WriteLine(e.Message);
-            }*/
-
-            #endregion
-            
 
             //Check to see if there is an active document in SolidWorks. If so, update the output labels (labels that display which files to look at configs from) to
             //display the file path of the currently loaded document. if there is no current document or the user browses for a new document (file) then the
@@ -81,10 +63,12 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                         pastedConfigComboBox.Items.Add(configName);
                     }
                 #endregion
+
+                //Default selections of combo boxes
+                copiedConfigComboBox.SelectedIndex = 0;
+                pastedConfigComboBox.SelectedIndex = 0;
             } //else keep the output labels not visible. Make the user browse for files.
-            //Default selections of combo boxes
-            copiedConfigComboBox.SelectedIndex = 0;
-            pastedConfigComboBox.SelectedIndex = 0;
+            
         }
 
         /// <summary>
@@ -128,7 +112,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.fromConfigLabel.Font = new System.Drawing.Font("Century Gothic", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.fromConfigLabel.Location = new System.Drawing.Point(12, 9);
             this.fromConfigLabel.Name = "fromConfigLabel";
-            this.fromConfigLabel.Size = new System.Drawing.Size(425, 33);
+            this.fromConfigLabel.Size = new System.Drawing.Size(551, 33);
             this.fromConfigLabel.TabIndex = 0;
             this.fromConfigLabel.Text = "Part or Assembly file to choose a configuration to copy display states FROM: ";
             this.fromConfigLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -136,15 +120,15 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             // copiedConfigComboBox
             // 
             this.copiedConfigComboBox.FormattingEnabled = true;
-            this.copiedConfigComboBox.Location = new System.Drawing.Point(105, 73);
+            this.copiedConfigComboBox.Location = new System.Drawing.Point(129, 74);
             this.copiedConfigComboBox.Name = "copiedConfigComboBox";
-            this.copiedConfigComboBox.Size = new System.Drawing.Size(458, 20);
+            this.copiedConfigComboBox.Size = new System.Drawing.Size(458, 23);
             this.copiedConfigComboBox.TabIndex = 1;
             // 
             // copyButton
             // 
             this.copyButton.Font = new System.Drawing.Font("Century Gothic", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.copyButton.Location = new System.Drawing.Point(191, 249);
+            this.copyButton.Location = new System.Drawing.Point(244, 254);
             this.copyButton.Name = "copyButton";
             this.copyButton.Size = new System.Drawing.Size(197, 35);
             this.copyButton.TabIndex = 2;
@@ -158,7 +142,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.toConfigLabel.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.toConfigLabel.Location = new System.Drawing.Point(12, 153);
             this.toConfigLabel.Name = "toConfigLabel";
-            this.toConfigLabel.Size = new System.Drawing.Size(469, 26);
+            this.toConfigLabel.Size = new System.Drawing.Size(523, 26);
             this.toConfigLabel.TabIndex = 3;
             this.toConfigLabel.Text = "Part or Assembly file to choose a configuration to copy display states TO: \r\n";
             this.toConfigLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -166,9 +150,9 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             // pastedConfigComboBox
             // 
             this.pastedConfigComboBox.FormattingEnabled = true;
-            this.pastedConfigComboBox.Location = new System.Drawing.Point(105, 214);
+            this.pastedConfigComboBox.Location = new System.Drawing.Point(129, 211);
             this.pastedConfigComboBox.Name = "pastedConfigComboBox";
-            this.pastedConfigComboBox.Size = new System.Drawing.Size(458, 20);
+            this.pastedConfigComboBox.Size = new System.Drawing.Size(458, 23);
             this.pastedConfigComboBox.TabIndex = 4;
             // 
             // configurationTextFromLabel
@@ -178,7 +162,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.configurationTextFromLabel.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.configurationTextFromLabel.Location = new System.Drawing.Point(12, 74);
             this.configurationTextFromLabel.Name = "configurationTextFromLabel";
-            this.configurationTextFromLabel.Size = new System.Drawing.Size(87, 16);
+            this.configurationTextFromLabel.Size = new System.Drawing.Size(111, 19);
             this.configurationTextFromLabel.TabIndex = 5;
             this.configurationTextFromLabel.Text = "Configuration: ";
             // 
@@ -189,14 +173,14 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.configurationTextPastedLabel.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.configurationTextPastedLabel.Location = new System.Drawing.Point(12, 215);
             this.configurationTextPastedLabel.Name = "configurationTextPastedLabel";
-            this.configurationTextPastedLabel.Size = new System.Drawing.Size(87, 16);
+            this.configurationTextPastedLabel.Size = new System.Drawing.Size(111, 19);
             this.configurationTextPastedLabel.TabIndex = 6;
             this.configurationTextPastedLabel.Text = "Configuration: ";
             // 
             // browseForPastedConfigDocumentButton
             // 
             this.browseForPastedConfigDocumentButton.Font = new System.Drawing.Font("Century Gothic", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.browseForPastedConfigDocumentButton.Location = new System.Drawing.Point(433, 145);
+            this.browseForPastedConfigDocumentButton.Location = new System.Drawing.Point(569, 152);
             this.browseForPastedConfigDocumentButton.Name = "browseForPastedConfigDocumentButton";
             this.browseForPastedConfigDocumentButton.Size = new System.Drawing.Size(130, 27);
             this.browseForPastedConfigDocumentButton.TabIndex = 7;
@@ -207,7 +191,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             // browseForCopiedConfigDocumentButton
             // 
             this.browseForCopiedConfigDocumentButton.Font = new System.Drawing.Font("Century Gothic", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.browseForCopiedConfigDocumentButton.Location = new System.Drawing.Point(433, 9);
+            this.browseForCopiedConfigDocumentButton.Location = new System.Drawing.Point(569, 15);
             this.browseForCopiedConfigDocumentButton.Name = "browseForCopiedConfigDocumentButton";
             this.browseForCopiedConfigDocumentButton.Size = new System.Drawing.Size(130, 27);
             this.browseForCopiedConfigDocumentButton.TabIndex = 8;
@@ -219,9 +203,9 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             // 
             this.nameOfCopiedDocumentLabel.Font = new System.Drawing.Font("Century Gothic", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.nameOfCopiedDocumentLabel.ForeColor = System.Drawing.Color.Red;
-            this.nameOfCopiedDocumentLabel.Location = new System.Drawing.Point(15, 37);
+            this.nameOfCopiedDocumentLabel.Location = new System.Drawing.Point(12, 38);
             this.nameOfCopiedDocumentLabel.Name = "nameOfCopiedDocumentLabel";
-            this.nameOfCopiedDocumentLabel.Size = new System.Drawing.Size(548, 33);
+            this.nameOfCopiedDocumentLabel.Size = new System.Drawing.Size(535, 36);
             this.nameOfCopiedDocumentLabel.TabIndex = 11;
             this.nameOfCopiedDocumentLabel.Text = "null_copied";
             this.nameOfCopiedDocumentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -231,9 +215,9 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             // 
             this.nameOfPastedDocumentLabel.Font = new System.Drawing.Font("Century Gothic", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.nameOfPastedDocumentLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
-            this.nameOfPastedDocumentLabel.Location = new System.Drawing.Point(15, 175);
+            this.nameOfPastedDocumentLabel.Location = new System.Drawing.Point(12, 172);
             this.nameOfPastedDocumentLabel.Name = "nameOfPastedDocumentLabel";
-            this.nameOfPastedDocumentLabel.Size = new System.Drawing.Size(548, 36);
+            this.nameOfPastedDocumentLabel.Size = new System.Drawing.Size(551, 36);
             this.nameOfPastedDocumentLabel.TabIndex = 12;
             this.nameOfPastedDocumentLabel.Text = "null_pasted";
             this.nameOfPastedDocumentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -241,9 +225,9 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             // 
             // CopyDisplayStatesForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(575, 293);
+            this.ClientSize = new System.Drawing.Size(724, 304);
             this.Controls.Add(this.nameOfPastedDocumentLabel);
             this.Controls.Add(this.nameOfCopiedDocumentLabel);
             this.Controls.Add(this.browseForCopiedConfigDocumentButton);
@@ -286,10 +270,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void BrowseForCopiedConfigDocumentButtonClick(object sender, EventArgs e) {
-
-
-
-
             openFileDialog = new OpenFileDialog(); //creates a dialog box for the user to select a file
             //We want to make sure that file types for both configurations are the same. If one file is a .SLDASM, then the
             //other should be as well (and the same goes for .SLDPRT). Note ToUpper() might be faster than ToLower()
@@ -300,7 +280,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                     openFileDialog.Filter = "SolidWorks Assemblies (*.SLDASM)|*.SLDASM";
                 }
             } else { //else nothing has been selected yet.
-                openFileDialog.Filter = "SolidWorks Parts (*.SLDPRT)|*.SLDPRT|SolidWorks Assemblies (*.SLDASM)|*.SLDASM";
+                openFileDialog.Filter = "SolidWorks Parts (SolidWorks Assemblies (*.SLDASM)|*.SLDASM|*.SLDPRT)|*.SLDPRT";
             }
 
 
@@ -320,13 +300,13 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             copiedDoc = TaskpaneExtensionsAddIn.mySolidWorks.OpenDoc7(swDocSpecification); //
 
             string[] listOfConfigNames = (string[]) copiedDoc.GetConfigurationNames(); //Get string array where each element is a configuration name
-            copiedConfigArr = new Configuration[listOfConfigNames .Length]; //instantiate private class member copiedConfigArr to hold the configurations of
+            copiedConfigArr = new Configuration[listOfConfigNames.Length]; //instantiate private class member copiedConfigArr to hold the configurations of
             int index = -1;
-            foreach (string configName in listOfConfigNames) {
+            foreach (string configName in listOfConfigNames) {//for each configuration in this document, get the names of the configurations and save them in the combobox
                 copiedConfigArr[++index] = (Configuration) copiedDoc.GetConfigurationByName(configName); //add config to copied config arrays
                 copiedConfigComboBox.Items.Add(configName); //update the combo box (drop down menus)
             }
-            copiedConfigComboBox.SelectedIndex = 0;
+            copiedConfigComboBox.SelectedIndex = 0; //set selection to the first element
         }
 
         /// <summary>
@@ -351,8 +331,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                 }
             }
             else { //else nothing has been selected yet.
-                openFileDialog.Filter =
-                    "SolidWorks Parts (*.SLDPRT)|*.SLDPRT|SolidWorks Assemblies (*.SLDASM)|*.SLDASM";
+                openFileDialog.Filter = "SolidWorks Parts (SolidWorks Assemblies (*.SLDASM)|*.SLDASM|*.SLDPRT)|*.SLDPRT";
             }
 
 
@@ -372,104 +351,122 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             DocumentSpecification swDocSpecification = (DocumentSpecification) TaskpaneExtensionsAddIn.mySolidWorks.GetOpenDocSpec(pastedFilePath);
             pastedDoc = TaskpaneExtensionsAddIn.mySolidWorks.OpenDoc7(swDocSpecification); //
 
-            string[] listOfConfigNames = (string[]) pastedDoc.GetConfigurationNames(); //Get string array where each element is a configuration name
+            string[] listOfConfigNames = (string[]) pastedDoc.GetConfigurationNames(); //String array where each element is a configuration name
             pastedConfigArr = new Configuration[listOfConfigNames.Length]; //instantiate private class member copiedConfigArr to hold the configurations of
             int index = -1;
-            foreach (string configName in listOfConfigNames) {
+            foreach (string configName in listOfConfigNames) { //for each configuration in this document, get the names of the configurations and save them in the combobox
                 pastedConfigArr[++index] = (Configuration) pastedDoc.GetConfigurationByName(configName); //add config to copied config arrays
                 pastedConfigComboBox.Items.Add(configName); //update the combo box (drop down menus)
             }
-            pastedConfigComboBox.SelectedIndex = 0;
+            pastedConfigComboBox.SelectedIndex = 0; //set selection to the first element
         }
 
         /// <summary>
-        /// This method copies the display states from one configuration to another.
-        /// 
+        /// This method is invoked when the "Copy Display States" button is pressed. It simply looks to see if it is copying
+        /// display states from two part configurations or assembly configurations, and then calls the appropriate method to do that.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ButtonClicked(object sender, EventArgs e) {
-
-            StreamWriter writer = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New output text.txt");
-            writer.AutoFlush = true;
-            try {
-                StreamWriter test = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\output part names.txt", true);
-                test.AutoFlush = true;
-
-                Configuration copiedConfig = (Configuration)copiedDoc.GetConfigurationByName(copiedConfigComboBox.SelectedItem.ToString());
-                Configuration pastedConfig = (Configuration)copiedDoc.GetConfigurationByName(pastedConfigComboBox.SelectedItem.ToString());
-                string[] copiedDisplayStateNames = (string[]) copiedConfig.GetDisplayStates();
-                object oComponents = null;
-
-                copiedDoc.ShowConfiguration2(copiedConfig.Name);
-                int[] copiedConfigDisplayStateVisibilities = (int[])copiedConfig.GetDisplayStateComponentVisibility(copiedDisplayStateNames[3], false, false, out oComponents);
-                object[] copiedComponents = (object[])oComponents;
-                int[] copiedConfigSuppressedComponents = new int[copiedComponents.Length];
-                for (int i = 0; i < copiedComponents.Length; i++) {
-                    copiedConfigSuppressedComponents[i] = ((Component2) copiedComponents[i]).GetSuppression2();
-                    test.WriteLine($"{DateTime.Now}: {copiedConfigSuppressedComponents[i]}");
-                }
-
-
-                //Get components of the pasted config
-                pastedDoc.ShowConfiguration2(pastedConfig.Name);
-                pastedConfig.CreateDisplayState($"{copiedDisplayStateNames[3]} copy"); //create a new display state in the pasted config
-                pastedConfig.ApplyDisplayState($"{copiedDisplayStateNames[3]} copy");
-
-                //Now that the pastedConfig is open, we can get the components of the pasted config and put them into a dictionary by name
-                int[] pastedConfigDisplayStateVisibilities = (int[])pastedConfig.GetDisplayStateComponentVisibility(((string[])(pastedConfig.GetDisplayStates()))[0], false, false, out oComponents);
-                Dictionary<string, object> pastedConfigDictionaryOfComponents = ((object[])oComponents).ToDictionary(key => ((Component2)key).Name2, value => value);
-
-
+            if (copiedFilePath.Substring(copiedFilePath.Length - 7).ToUpper().Equals(".SLDPRT")) {
+                throw new NotImplementedException("Copying display states from parts has not yet been implemented");
+            } else { //else it is an assembly
+                StreamWriter debugger =
+                    new StreamWriter(
+                        @"C:\Users\13016\Documents\COMP SCI - C#\SolidWorks Add-Ins\bin\Release\Debugging output.txt");
+                debugger.AutoFlush = true;
                 try {
-                    //else do nothing
-                    for (int i = 0; i < copiedComponents.Length; i++) {
-                        test.WriteLine(DateTime.Now + ": " + i.ToString() + " ---> " + ((Component2)copiedComponents[i]).Name2);
-
-                        //if the component is hidden
-                        if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2)copiedComponents[i]).Name2)) {
-                            ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2]).Visible = copiedConfigDisplayStateVisibilities[i];
-                            ((Component2) pastedConfigDictionaryOfComponents[((Component2) copiedComponents[i]).Name2])
-                                .SetSuppression2(copiedConfigSuppressedComponents[i]);
-                        } //else do nothing
-
-                        //If the component is also suppressed
-                        /*if () {
-
-                        }*/
-                    }
-                } catch (Exception exe) {
-                    test.WriteLine($"{DateTime.Now}: {exe.ToString()}");
+                    copyDisplayStatesFromAssemblies(ref debugger);
+                } catch (Exception ex) {
+                    debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
+                } finally {
+                    debugger.Close();
                 }
-                
+            }
+        }
 
-                
+        /// <summary>
+        /// This method is called when the "Copy Display States" button is pressed and the two configurations in question are from two
+        /// assembly documents.
+        /// </summary>
+        internal void copyDisplayStatesFromAssemblies(ref StreamWriter debugger) {
+            //Obtain the configurations to copy and paste the display states to and from, respectively, by looking at the combo boxes in the WinForms GUI.
+            //debugger.WriteLine("The length is: \t" + copiedDoc.GetConfigurationByName(copiedConfigComboBox.SelectedItem.ToString().ToString()));
+            Configuration copiedConfig = (Configuration)copiedDoc.GetConfigurationByName(copiedConfigComboBox.SelectedItem.ToString());
+            Configuration pastedConfig = (Configuration)pastedDoc.GetConfigurationByName(pastedConfigComboBox.SelectedItem.ToString());
+            
+            string[] copiedDisplayStateNames = (string[])copiedConfig.GetDisplayStates(); //obtain the names of the display states we're going to copy
+            object oComponents = null; //this variable is simply a temporary one that is passed by reference to the'
+                                       //Configuration.GetDisplayStateComponentVisibility to obtain the components of that configurations
 
-               
+            copiedDoc.ShowConfiguration2(copiedConfig.Name); //switch to the configuration that we're copying display states from.
+            int[] copiedConfigDisplayStateVisibilities = (int[])copiedConfig.GetDisplayStateComponentVisibility(copiedDisplayStateNames[0], false, false, out oComponents); //get component visibility AND get components
+            object[] copiedComponents = (object[])oComponents; //since oComponents is passed by reference in GetDisplayStateComponentVisibility, it can now be cast to an array containing our components
+            int[] copiedConfigSuppressedComponents = new int[copiedComponents.Length]; //instantiate a new array to hold the suppression states for each component
+            for (int i = 0; i < copiedComponents.Length; i++) { //for each component, get the suppression state
+                copiedConfigSuppressedComponents[i] = ((Component2)copiedComponents[i]).GetSuppression2();
+            }
 
-                //else do nothing
-                /*
+            /*                                                      Get components of the pasted config
+             *
+             * First, switch to the pasted configuration. If we do NOT switch to the pasted configuration and stay on the
+             * copied configuration, when we go to get the components in the pasted configuration, even though
+             * we've listed the name of a pastedConfig display state, we will still be getting components and their
+             * visibilities from the active configuration (which would be the copied one). In fact, if we don't
+             * switch and the pastedConfig display state name we pass in is not a valid display state name for the
+             * active configuration, then oComponents will be set to null.
+             */
+            pastedDoc.ShowConfiguration2(pastedConfig.Name); //Switch to pasted configuration
+            pastedConfig.CreateDisplayState($"{copiedDisplayStateNames[3]} copy"); //create a new display state in the pasted config
+            pastedConfig.ApplyDisplayState($"{copiedDisplayStateNames[3]} copy"); //activate that display state (so when we go to hide/show components,
+                                                                                  //it is done in the newly created display state).
 
-                test.Close();
-                copiedDoc.ShowConfiguration2(copiedConfig.Name);
-                /*
-                foreach (string displayStateName in copiedDisplayStateNames) {
-                    pastedDoc.ShowConfiguration2(pastedConfig.Name);
-                    pastedConfig.CreateDisplayState($"{displayStateName} copy"); //create a new display state in the pasted config
-                    pastedConfig.ApplyDisplayState($"{displayStateName} copy");
+            //Now that the pastedConfig is open, we can get the components of the pasted config and put them into a dictionary by name
+            pastedConfig.GetDisplayStateComponentVisibility(((string[])(pastedConfig.GetDisplayStates()))[0], false, false, out oComponents); //no need to save component visibility in a new display state,
+                                                                                                                                              //The point of this line is to get the pastedConfig components
+            /*
+             * The key value pair of this dictionary is <Key, Value> = <string, object> = <"SolidWorks Component Name", "SolidWorks COM object as object class">
+             *
+             * The reason I'm using a Dictionary here as opposed to a regular array is because this method is supposed to work for different assembly files, and they
+             * will most likely not have the same parts in within each other; we need to make sure that we only want to set the visibilities and suppression states of
+             * components/parts that are common between the configurations, so, we must first check whether a component/part exists in the pasted configuration before
+             * changing its visibility or suppression state. The easiest way to do this is with a dictionary (same data structure as a "HashMap/HashTable" in Java),
+             * because a Dictionary has O(1) (fastest) lookup time. Also, it is convenient to store the Components (which at this point are COM Objects because we
+             * have not yet casted them to a Component2 type yet) in a key-value pair with the key being the component's name as a string and the value being the
+             * uncasted COM object.
+             *
+             * We can use the ToDictionary() method from the System.Linq library to convert the casted array from oComponents into a Dictionary.
+             */
+            Dictionary<string, object> pastedConfigDictionaryOfComponents = ((object[])oComponents).ToDictionary(key => ((Component2)key).Name2, value => value);
 
-                    componentDisplayStateVisibilities = (int[])copiedConfig.GetDisplayStateComponentVisibility(displayStateName, false, false, out oComponents);
-                    for (int i = 0; i < copiedComponents.Length; i++) {
-                        if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2)copiedComponents[i]).Name)) {
-                            ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name]).Visible = componentDisplayStateVisibilities[i];
-                        } //else do nothing
+            //Here we iterate through the copied Components and apply their suppression states to those common components/parts in the pasted configuration
+            //Suppressed components/parts are applied to a configuration, not specific display states; in other words, if you suppress a component in one
+            //display state, all other display states will make that component suppressed as well (this is a SolidWorks feature, not something I coded).
+            //Because of this, we only want to check and apply suppression states once, not for every display state.
+            for (int i = 0; i < copiedComponents.Length; i++) {
+
+                //Check to see if the copied component exists as a part in the pasted configuration; if so, then set the suppression state to what is was in the copied config.
+                if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2)copiedComponents[i]).Name2)) {
+                    ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2]).SetSuppression2(copiedConfigSuppressedComponents[i]);
+                } //else the copied component does not exist in the pasted assembly document; do nothing
+            }
+
+            //This big bad foreach loop is what creates the new display states in the pasted configurations and sets the visibilities of their components
+            foreach (string displayStateName in copiedDisplayStateNames) {
+                copiedDoc.ShowConfiguration2(copiedConfig.Name); //open copied configuration so we may get the display state visibilities of that configuration.
+                copiedConfigDisplayStateVisibilities = (int[])copiedConfig.GetDisplayStateComponentVisibility(displayStateName, false, false, out oComponents); //no need to save oComponents this time
+
+                pastedDoc.ShowConfiguration2(pastedConfig.Name); //show pasted configuration so we may create a new display state for it
+                pastedConfig.CreateDisplayState($"{displayStateName} copy"); //create a new display state in the pasted config
+                pastedConfig.ApplyDisplayState($"{displayStateName} copy"); //apply this new display state so we may apply the appropriate visibilities to its components
+
+                pastedConfig.GetDisplayStateComponentVisibility(((string[])(pastedConfig.GetDisplayStates()))[0], false, false, out oComponents); //just here for components, not component visibilities
+                pastedConfigDictionaryOfComponents = ((object[])oComponents).ToDictionary(key => ((Component2)key).Name2, value => value); //create new Dictionary of all parts in the pasted configuration
+                for (int i = 0; i < copiedComponents.Length; i++) { //for each component
+                    if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2)copiedComponents[i]).Name2)) { //check if the component from the copied config exists in the pasted config
+                        ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2]).Visible = copiedConfigDisplayStateVisibilities[i]; //apply visibilities
                     }
-                    copiedDoc.ShowConfiguration2(copiedConfig.Name);
-                }*/
-            } catch (Exception ex) {
-                writer.WriteLine($"{DateTime.Now}: {ex.ToString()}");
-            } finally {
-                writer.Close();
+                }
             }
         }
     }

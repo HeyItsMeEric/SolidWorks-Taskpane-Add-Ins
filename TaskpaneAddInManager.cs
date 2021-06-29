@@ -49,20 +49,20 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.TaskpaneCopyDisplayStatesButton = new System.Windows.Forms.Button();
+            this.taskpaneCopyDisplayStatesButton = new System.Windows.Forms.Button();
             this.CDSBArtist = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // TaskpaneCopyDisplayStatesButton
+            // taskpaneCopyDisplayStatesButton
             // 
-            this.TaskpaneCopyDisplayStatesButton.Location = new System.Drawing.Point(15, 10);
-            this.TaskpaneCopyDisplayStatesButton.Margin = new System.Windows.Forms.Padding(2);
-            this.TaskpaneCopyDisplayStatesButton.Name = "TaskpaneCopyDisplayStatesButton";
-            this.TaskpaneCopyDisplayStatesButton.Size = new System.Drawing.Size(118, 46);
-            this.TaskpaneCopyDisplayStatesButton.TabIndex = 0;
-            this.TaskpaneCopyDisplayStatesButton.Text = "Copy Display States";
-            this.TaskpaneCopyDisplayStatesButton.UseVisualStyleBackColor = true;
-            this.TaskpaneCopyDisplayStatesButton.Click += new System.EventHandler(this.CopyDisplayStatesButtonClicked);
+            this.taskpaneCopyDisplayStatesButton.Location = new System.Drawing.Point(15, 10);
+            this.taskpaneCopyDisplayStatesButton.Margin = new System.Windows.Forms.Padding(2);
+            this.taskpaneCopyDisplayStatesButton.Name = "taskpaneCopyDisplayStatesButton";
+            this.taskpaneCopyDisplayStatesButton.Size = new System.Drawing.Size(118, 46);
+            this.taskpaneCopyDisplayStatesButton.TabIndex = 0;
+            this.taskpaneCopyDisplayStatesButton.Text = "Copy Display States";
+            this.taskpaneCopyDisplayStatesButton.UseVisualStyleBackColor = true;
+            this.taskpaneCopyDisplayStatesButton.Click += new System.EventHandler(this.CopyDisplayStatesButtonClicked);
             // 
             // CDSBArtist
             // 
@@ -78,7 +78,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.CDSBArtist);
-            this.Controls.Add(this.TaskpaneCopyDisplayStatesButton);
+            this.Controls.Add(this.taskpaneCopyDisplayStatesButton);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "TaskpaneAddInManager";
             this.Size = new System.Drawing.Size(333, 659);
@@ -87,8 +87,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
         }
 
-        private System.Windows.Forms.Button TaskpaneCopyDisplayStatesButton;
-        private System.Windows.Forms.Button copyDisplayStateButton;
+        private System.Windows.Forms.Button taskpaneCopyDisplayStatesButton;
         private Label CDSBArtist;
         #endregion
 
@@ -101,7 +100,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             //Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             //Application.SetCompatibleTextRenderingDefault(false);
-            StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\DebugOutput.txt");
+            StreamWriter debugger = new StreamWriter(@"C:\Users\13016\Documents\COMP SCI - C#\SolidWorks Add-Ins\bin\Release\text3.txt");
             debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
             debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
             debugger.WriteLine($"{DateTime.Now}: {"Hello"}");

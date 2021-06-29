@@ -37,39 +37,39 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SolidWorks.Interop.sldworks">
-      <HintPath>lib\SolidWorks.Interop.sldworks.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.sldworks.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.sw3dprinter">
-      <HintPath>lib\SolidWorks.Interop.sw3dprinter.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.sw3dprinter.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swcommands">
-      <HintPath>lib\SolidWorks.Interop.swcommands.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.swcommands.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swconst">
-      <HintPath>lib\SolidWorks.Interop.swconst.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.swconst.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swdimxpert">
-      <HintPath>lib\SolidWorks.Interop.swdimxpert.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.swdimxpert.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swdocumentmgr">
-      <HintPath>lib\SolidWorks.Interop.swdocumentmgr.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.swdocumentmgr.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swmotionstudy">
-      <HintPath>lib\SolidWorks.Interop.swmotionstudy.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.swmotionstudy.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swpublished">
-      <HintPath>lib\SolidWorks.Interop.swpublished.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.swpublished.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.SWRoutingLib">
-      <HintPath>lib\SolidWorks.Interop.SWRoutingLib.dll</HintPath>
+      <HintPath>2019 lib\SolidWorks.Interop.SWRoutingLib.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
@@ -93,6 +93,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CopyDisplayStates.resx">
+      <DependentUpon>CopyDisplayStates.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TaskpaneAddInManager.resx">
       <DependentUpon>TaskpaneAddInManager.cs</DependentUpon>
     </EmbeddedResource>
