@@ -100,21 +100,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             //Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             //Application.SetCompatibleTextRenderingDefault(false);
-            StreamWriter debugger = new StreamWriter(@"C:\Users\13016\Documents\COMP SCI - C#\SolidWorks Add-Ins\bin\Release\text3.txt");
-            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
-            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
-            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
-            debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
-            try {
-                debugger.WriteLine($"{DateTime.Now}: {"Hello"}");
-                Application.Run(new CopyDisplayStatesForm());
-            } catch (Exception ex) {
-                debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
-            } finally {
-                debugger.Close();
-            }
-
-
+            Application.Run(new CopyDisplayStatesForm());
         }
 
     }
@@ -163,19 +149,12 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// <param name="cookie"></param>
         /// <returns></returns>
         public bool ConnectToSW(object thisSw, int cookie) {
-            //For debugging
-            /*
-            StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New output text.txt");
-            debugger.WriteLine($"{DateTime.Now}: 1");
-            */
             mySolidWorks = (SldWorks)thisSw;
             mySolidWorks.SetAddinCallbackInfo2(0, this, cookie);
 
             Application.SetCompatibleTextRenderingDefault(false); //Must be set before the first IWin32Window object (WinForms object) is created, which is the next line.
             mySolidWorksTaskPane = mySolidWorks.CreateTaskpaneView2($@"{System.Reflection.Assembly.GetExecutingAssembly().Location.Replace("Gustafson.SolidWorks.TaskpaneAddIns.dll", "")}\\..\\..\\Images\\SW Custom Add-in Taskpane Icon.png", "Custom SolidWorks Add-Ins");
             manager = (TaskpaneAddInManager)mySolidWorksTaskPane.AddControl(PROGID, string.Empty);
-           /* debugger.WriteLine($"{DateTime.Now}: 2");
-            debugger.Close(); //for debugging*/
             return true; //success
         }
 

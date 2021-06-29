@@ -37,39 +37,39 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SolidWorks.Interop.sldworks">
-      <HintPath>2019 lib\SolidWorks.Interop.sldworks.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.sldworks.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.sw3dprinter">
-      <HintPath>2019 lib\SolidWorks.Interop.sw3dprinter.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.sw3dprinter.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swcommands">
-      <HintPath>2019 lib\SolidWorks.Interop.swcommands.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.swcommands.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swconst">
-      <HintPath>2019 lib\SolidWorks.Interop.swconst.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.swconst.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swdimxpert">
-      <HintPath>2019 lib\SolidWorks.Interop.swdimxpert.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.swdimxpert.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swdocumentmgr">
-      <HintPath>2019 lib\SolidWorks.Interop.swdocumentmgr.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.swdocumentmgr.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swmotionstudy">
-      <HintPath>2019 lib\SolidWorks.Interop.swmotionstudy.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.swmotionstudy.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.swpublished">
-      <HintPath>2019 lib\SolidWorks.Interop.swpublished.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.swpublished.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="SolidWorks.Interop.SWRoutingLib">
-      <HintPath>2019 lib\SolidWorks.Interop.SWRoutingLib.dll</HintPath>
+      <HintPath>2018 lib\SolidWorks.Interop.SWRoutingLib.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />

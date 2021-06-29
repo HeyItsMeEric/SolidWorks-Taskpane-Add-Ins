@@ -373,7 +373,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             } else { //else it is an assembly
                 StreamWriter debugger =
                     new StreamWriter(
-                        @"C:\Users\13016\Documents\COMP SCI - C#\SolidWorks Add-Ins\bin\Release\Debugging output.txt");
+                        @"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New output text.txt");
                 debugger.AutoFlush = true;
                 try {
                     copyDisplayStatesFromAssemblies(ref debugger);
@@ -404,7 +404,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             object[] copiedComponents = (object[])oComponents; //since oComponents is passed by reference in GetDisplayStateComponentVisibility, it can now be cast to an array containing our components
             int[] copiedConfigSuppressedComponents = new int[copiedComponents.Length]; //instantiate a new array to hold the suppression states for each component
             for (int i = 0; i < copiedComponents.Length; i++) { //for each component, get the suppression state
-                copiedConfigSuppressedComponents[i] = ((Component2)copiedComponents[i]).GetSuppression2();
+                copiedConfigSuppressedComponents[i] = ((Component2)copiedComponents[i]).GetSuppression(); //THE SOLIDWORKS 2018 ....sldworks.dll DOES NOT HAVE GetSuppression2(), BUT 2019 DOES
             }
 
             /*                                                      Get components of the pasted config
@@ -417,9 +417,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
              * active configuration, then oComponents will be set to null.
              */
             pastedDoc.ShowConfiguration2(pastedConfig.Name); //Switch to pasted configuration
-            pastedConfig.CreateDisplayState($"{copiedDisplayStateNames[3]} copy"); //create a new display state in the pasted config
-            pastedConfig.ApplyDisplayState($"{copiedDisplayStateNames[3]} copy"); //activate that display state (so when we go to hide/show components,
-                                                                                  //it is done in the newly created display state).
 
             //Now that the pastedConfig is open, we can get the components of the pasted config and put them into a dictionary by name
             pastedConfig.GetDisplayStateComponentVisibility(((string[])(pastedConfig.GetDisplayStates()))[0], false, false, out oComponents); //no need to save component visibility in a new display state,
@@ -437,19 +434,34 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
              *
              * We can use the ToDictionary() method from the System.Linq library to convert the casted array from oComponents into a Dictionary.
              */
-            Dictionary<string, object> pastedConfigDictionaryOfComponents = ((object[])oComponents).ToDictionary(key => ((Component2)key).Name2, value => value);
+            object[] comps = (object[]) oComponents;
+            Dictionary<string, object> pastedConfigDictionaryOfComponents = new Dictionary<string, object>(comps.Length);
+            foreach (object o in comps) {
+                debugger.WriteLine($"{DateTime.Now}: {((Component2) o).Name2}");
+                try {
+                    pastedConfigDictionaryOfComponents.Add(((Component2) o).Name2, o);
+                }
+                catch (Exception ex) {
+                    debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
+                }
+            }
+            //Dictionary<string, object> pastedConfigDictionaryOfComponents = comps.ToDictionary(key => ((Component2)key).Name2, value => value);
+            
+            
+            
+            //Dictionary<string, object> pastedConfigDictionaryOfComponents = ((object[])oComponents).ToDictionary(key => ((Component2)key).Name2, value => value);
 
             //Here we iterate through the copied Components and apply their suppression states to those common components/parts in the pasted configuration
             //Suppressed components/parts are applied to a configuration, not specific display states; in other words, if you suppress a component in one
             //display state, all other display states will make that component suppressed as well (this is a SolidWorks feature, not something I coded).
             //Because of this, we only want to check and apply suppression states once, not for every display state.
-            for (int i = 0; i < copiedComponents.Length; i++) {
+           /* for (int i = 0; i < copiedComponents.Length; i++) {
 
                 //Check to see if the copied component exists as a part in the pasted configuration; if so, then set the suppression state to what is was in the copied config.
                 if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2)copiedComponents[i]).Name2)) {
                     ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2]).SetSuppression2(copiedConfigSuppressedComponents[i]);
                 } //else the copied component does not exist in the pasted assembly document; do nothing
-            }
+            }*/
 
             //This big bad foreach loop is what creates the new display states in the pasted configurations and sets the visibilities of their components
             foreach (string displayStateName in copiedDisplayStateNames) {
@@ -460,8 +472,20 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                 pastedConfig.CreateDisplayState($"{displayStateName} copy"); //create a new display state in the pasted config
                 pastedConfig.ApplyDisplayState($"{displayStateName} copy"); //apply this new display state so we may apply the appropriate visibilities to its components
 
+                #region please work on this
                 pastedConfig.GetDisplayStateComponentVisibility(((string[])(pastedConfig.GetDisplayStates()))[0], false, false, out oComponents); //just here for components, not component visibilities
-                pastedConfigDictionaryOfComponents = ((object[])oComponents).ToDictionary(key => ((Component2)key).Name2, value => value); //create new Dictionary of all parts in the pasted configuration
+                //pastedConfigDictionaryOfComponents = ((object[])oComponents).ToDictionary(key => ((Component2)key).Name2, value => value); //create new Dictionary of all parts in the pasted configuration
+                comps = (object[])oComponents;
+                pastedConfigDictionaryOfComponents.Clear();
+                foreach (object o in comps) {
+                    //debugger.WriteLine($"{DateTime.Now}: {((Component2)o).Name2}");
+                    try {
+                        pastedConfigDictionaryOfComponents.Add(((Component2)o).Name2, o);
+                    } catch (Exception ex) {
+                        debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
+                    }
+                }
+                #endregion 
                 for (int i = 0; i < copiedComponents.Length; i++) { //for each component
                     if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2)copiedComponents[i]).Name2)) { //check if the component from the copied config exists in the pasted config
                         ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2]).Visible = copiedConfigDisplayStateVisibilities[i]; //apply visibilities
