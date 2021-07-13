@@ -1,5 +1,5 @@
 ﻿/*
- *
+ * A WinForm class with info about how registering a COM Assembly works.
  *
  * @author        Eric Gustafson
  * @date_created  July 12, 2021, 08:03:08 PM

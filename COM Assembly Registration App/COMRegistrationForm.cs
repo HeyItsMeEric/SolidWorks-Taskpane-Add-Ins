@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * An application that will add a COM Assembly to the Windows Registry. Internally calls the command prompt as an
+ * administrator and performs the necessary commands
+ *
+ * @author        Eric Gustafson
+ * @date_created  July 12, 2021, 04:32:05 PM
+ * @version       1.0
+ */
+
+using System;
 using System.IO;
 using System.Windows.Forms;
 
@@ -36,7 +45,8 @@ namespace COM_Assembly_Registration_App {
         private System.Windows.Forms.Label descriptionLabel;
         
         /// <summary>
-        /// 
+        /// A WinForm class that the user can browse for a COM Assembly to add and the RegAsm.exe file needed to add
+        /// the COM Assembly to the Windows Registry.
         /// </summary>
         public COMRegistrationForm() {
             InitializeComponent();
@@ -109,7 +119,7 @@ namespace COM_Assembly_Registration_App {
             this.installButton.TabIndex = 1;
             this.installButton.Text = "Install";
             this.installButton.UseVisualStyleBackColor = true;
-            this.installButton.Click += new System.EventHandler(this.installButton_Click);
+            this.installButton.Click += new System.EventHandler(this.InstallButtonClicked);
             // 
             // browseForCOMButton
             // 
@@ -251,7 +261,7 @@ namespace COM_Assembly_Registration_App {
         #endregion
 
         /// <summary>
-        /// 
+        /// Opens a dialog box so the user may browse for the COM Assembly to add.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -266,7 +276,7 @@ namespace COM_Assembly_Registration_App {
         }
 
         /// <summary>
-        /// 
+        /// Opens a dialog box for the user to browse for the RegAsm.exe executable
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -281,11 +291,11 @@ namespace COM_Assembly_Registration_App {
         }
         
         /// <summary>
-        /// 
+        /// Installs the COM Assembly specified
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void installButton_Click(object sender, EventArgs e) {
+        private void InstallButtonClicked(object sender, EventArgs e) {
             //Check if the selected paths are valid paths
             if (!File.Exists(comTextBox.Text) && !File.Exists(regAsmTextBox.Text)) {
                 MessageBox.Show("Invalid paths for both a dll and RegAsm.exe!",
@@ -317,7 +327,7 @@ namespace COM_Assembly_Registration_App {
         }
 
         /// <summary>
-        /// 
+        /// Uninstalls the COM Assembly specified
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -359,10 +369,20 @@ namespace COM_Assembly_Registration_App {
             this.Close();
         }
         
+        /// <summary>
+        /// Opens a new Form about how registering the COM assembly works
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void HowThisWorksToolStripMenuItemClicked(object sender, EventArgs e) {
             new HowItWorksForm().ShowDialog();
         }
 
+        /// <summary>
+        /// Opens a new Form with my info!
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AboutTheAuthorToolStripMenuItemClicked(object sender, EventArgs e) {
             new AboutTheAuthorForm().ShowDialog();
         }

@@ -102,7 +102,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             //Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new CopyDisplayStatesForm());
         }
-
     }
 
 
