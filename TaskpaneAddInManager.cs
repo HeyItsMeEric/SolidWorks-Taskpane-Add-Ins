@@ -171,7 +171,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         }
 
         /*
-         * The Windows operating System has a registry that stores much of the information and settings for software
+         * "The Windows operating System has a registry that stores much of the information and settings for software
          * programs, hardware devices, user preferences, and operating-system configurations (https://bit.ly/3j9NkH1)."
          * Windows provides a GUI application, Registry Editor (aka RegEdit), that displays the information the
          * registry has.

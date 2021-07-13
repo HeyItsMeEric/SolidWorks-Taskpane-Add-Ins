@@ -491,6 +491,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                         ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2]).Visible = copiedConfigDisplayStateVisibilities[i]; //apply visibilities
                     }
                 }
+                this.Close();
             }
         }
     }
