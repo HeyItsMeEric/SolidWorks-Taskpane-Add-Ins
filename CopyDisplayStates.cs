@@ -9,17 +9,10 @@
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Security;
-using System.Text;
-using Component = SolidWorks.Interop.sldworks.Component;
 
 namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
@@ -36,11 +29,10 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         private Configuration[] copiedConfigArr;
         private Configuration[] pastedConfigArr;
         private ModelDoc2 copiedDoc;
-        private Button button1;
         private ModelDoc2 pastedDoc;
 
 
-        
+
 
         /// <summary>
         /// Initializes the Win Form GUI
@@ -50,11 +42,15 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             pastedFilePath = null;
             InitializeComponent();
 
+            //Centering the Form in the middle of the screen
+            this.Location = new System.Drawing.Point((Screen.FromControl(this).Bounds.Width - this.Width) / 2,
+                (Screen.FromControl(this).Bounds.Height / 7));
+
             //Check to see if there is an active document in SolidWorks. If so, update the output labels (labels that display which files to look at configs from) to
             //display the file path of the currently loaded document. if there is no current document or the user browses for a new document (file) then the
             //button_pressed methods in this class that take care of that will traverse the file and find the configurations.
             if (TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc != null) {
-                copiedDoc = (ModelDoc2) TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc;
+                copiedDoc = (ModelDoc2)TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc;
                 pastedDoc = (ModelDoc2)TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc;
                 copiedFilePath = pastedFilePath = copiedDoc.GetPathName(); //Set the file paths of the copied and pasted documents to the active document
                 nameOfCopiedDocumentLabel.Text = copiedFilePath; //Set the text of the output labels
@@ -62,23 +58,23 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                 nameOfCopiedDocumentLabel.Visible = nameOfPastedDocumentLabel.Visible = true; //Set the labels' visibility to true
 
                 #region Traverse document for configuration names
-                    string[] listOfConfigNames = (string[]) copiedDoc.GetConfigurationNames(); //Get string array where each element is a configuration name
-                    copiedConfigArr = new Configuration[listOfConfigNames.Length]; //instantiate private class member copiedConfigArr to hold the configurations of
-                    pastedConfigArr = new Configuration[listOfConfigNames.Length];
-                    int index = -1;
-                    foreach (string configName in listOfConfigNames) {
-                        copiedConfigArr[++index] = (Configuration) copiedDoc.GetConfigurationByName(configName); //add config to both config arrays
-                        pastedConfigArr[index] = copiedConfigArr[index]; 
-                        copiedConfigComboBox.Items.Add(configName); //update the combo boxes (drop down menus)
-                        pastedConfigComboBox.Items.Add(configName);
-                    }
+                string[] listOfConfigNames = (string[])copiedDoc.GetConfigurationNames(); //Get string array where each element is a configuration name
+                copiedConfigArr = new Configuration[listOfConfigNames.Length]; //instantiate private class member copiedConfigArr to hold the configurations of
+                pastedConfigArr = new Configuration[listOfConfigNames.Length];
+                int index = -1;
+                foreach (string configName in listOfConfigNames) {
+                    copiedConfigArr[++index] = (Configuration)copiedDoc.GetConfigurationByName(configName); //add config to both config arrays
+                    pastedConfigArr[index] = copiedConfigArr[index];
+                    copiedConfigComboBox.Items.Add(configName); //update the combo boxes (drop down menus)
+                    pastedConfigComboBox.Items.Add(configName);
+                }
                 #endregion
 
                 //Default selections of combo boxes
                 copiedConfigComboBox.SelectedIndex = 0;
                 pastedConfigComboBox.SelectedIndex = 0;
             } //else keep the output labels not visible. Make the user browse for files.
-            
+
         }
 
         /// <summary>
@@ -115,7 +111,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.browseForCopiedConfigDocumentButton = new System.Windows.Forms.Button();
             this.nameOfCopiedDocumentLabel = new System.Windows.Forms.Label();
             this.nameOfPastedDocumentLabel = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // fromConfigLabel
@@ -234,22 +229,11 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.nameOfPastedDocumentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.nameOfPastedDocumentLabel.Visible = false;
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(621, 273);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 13;
-            this.button1.Text = "test output";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // CopyDisplayStatesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(724, 304);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.nameOfPastedDocumentLabel);
             this.Controls.Add(this.nameOfCopiedDocumentLabel);
             this.Controls.Add(this.browseForCopiedConfigDocumentButton);
@@ -318,14 +302,14 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             }
 
             //Copy the configurations of the new file into the combo boxes
-            DocumentSpecification swDocSpecification = (DocumentSpecification)TaskpaneExtensionsAddIn.mySolidWorks.GetOpenDocSpec(copiedFilePath); 
+            DocumentSpecification swDocSpecification = (DocumentSpecification)TaskpaneExtensionsAddIn.mySolidWorks.GetOpenDocSpec(copiedFilePath);
             copiedDoc = TaskpaneExtensionsAddIn.mySolidWorks.OpenDoc7(swDocSpecification); //
 
-            string[] listOfConfigNames = (string[]) copiedDoc.GetConfigurationNames(); //Get string array where each element is a configuration name
+            string[] listOfConfigNames = (string[])copiedDoc.GetConfigurationNames(); //Get string array where each element is a configuration name
             copiedConfigArr = new Configuration[listOfConfigNames.Length]; //instantiate private class member copiedConfigArr to hold the configurations of
             int index = -1;
             foreach (string configName in listOfConfigNames) {//for each configuration in this document, get the names of the configurations and save them in the combobox
-                copiedConfigArr[++index] = (Configuration) copiedDoc.GetConfigurationByName(configName); //add config to copied config arrays
+                copiedConfigArr[++index] = (Configuration)copiedDoc.GetConfigurationByName(configName); //add config to copied config arrays
                 copiedConfigComboBox.Items.Add(configName); //update the combo box (drop down menus)
             }
             copiedConfigComboBox.SelectedIndex = 0; //set selection to the first element
@@ -347,12 +331,10 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                 if (copiedFilePath.Substring(copiedFilePath.Length - 7).ToUpper().Equals(".SLDPRT")) {
                     //if the other file is a .SLDPRT
                     openFileDialog.Filter = "SolidWorks Parts (*.SLDPRT)|*.SLDPRT";
-                }
-                else { //The other file is a .SLDASM
+                } else { //The other file is a .SLDASM
                     openFileDialog.Filter = "SolidWorks Assemblies (*.SLDASM)|*.SLDASM";
                 }
-            }
-            else { //else nothing has been selected yet.
+            } else { //else nothing has been selected yet.
                 openFileDialog.Filter = "SolidWorks Parts (SolidWorks Assemblies (*.SLDASM)|*.SLDASM|*.SLDPRT)|*.SLDPRT";
             }
 
@@ -362,22 +344,21 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                     pastedFilePath = openFileDialog.FileName;
                     nameOfPastedDocumentLabel.Text = pastedFilePath;
                     nameOfPastedDocumentLabel.Visible = true;
-                }
-                catch (SecurityException exception) { //I don't think we'll ever get here
+                } catch (SecurityException exception) { //I don't think we'll ever get here
                     MessageBox.Show("You do not have permission to open this file!",
                         "Copy Display States - No Permission", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
             //Copy the configurations of the new file into the combo boxes
-            DocumentSpecification swDocSpecification = (DocumentSpecification) TaskpaneExtensionsAddIn.mySolidWorks.GetOpenDocSpec(pastedFilePath);
+            DocumentSpecification swDocSpecification = (DocumentSpecification)TaskpaneExtensionsAddIn.mySolidWorks.GetOpenDocSpec(pastedFilePath);
             pastedDoc = TaskpaneExtensionsAddIn.mySolidWorks.OpenDoc7(swDocSpecification); //
 
-            string[] listOfConfigNames = (string[]) pastedDoc.GetConfigurationNames(); //String array where each element is a configuration name
+            string[] listOfConfigNames = (string[])pastedDoc.GetConfigurationNames(); //String array where each element is a configuration name
             pastedConfigArr = new Configuration[listOfConfigNames.Length]; //instantiate private class member copiedConfigArr to hold the configurations of
             int index = -1;
             foreach (string configName in listOfConfigNames) { //for each configuration in this document, get the names of the configurations and save them in the combobox
-                pastedConfigArr[++index] = (Configuration) pastedDoc.GetConfigurationByName(configName); //add config to copied config arrays
+                pastedConfigArr[++index] = (Configuration)pastedDoc.GetConfigurationByName(configName); //add config to copied config arrays
                 pastedConfigComboBox.Items.Add(configName); //update the combo box (drop down menus)
             }
             pastedConfigComboBox.SelectedIndex = 0; //set selection to the first element
@@ -400,7 +381,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                         @"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New output text.txt");
                 debugger.AutoFlush = true;
                 try {
-                    copyDisplayStatesFromAssemblies(ref debugger);
+                    CopyDisplayStatesFromAssemblies(ref debugger);
                 } catch (Exception ex) {
                     debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
                 } finally {
@@ -409,228 +390,49 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             }
         }
 
-        private struct ComponentAndVisibilityPair {
-            public object Component { get; }
-            private int visibility { get; set; }
 
-            public ComponentAndVisibilityPair(object component, int visibility) {
-                this.Component = component;
-                this.visibility = visibility;
-            }
-
-            public void SetVisibility(int visibility) {
-                this.visibility = visibility;
-            }
-
-            public int GetVisibility() {
-                return this.visibility;
-            }
-        }
 
         /// <summary>
-        /// This method is called when the "Copy Display States" button is pressed and the two configurations in question are from two
-        /// assembly documents.
+        /// 
         /// </summary>
-        internal void copyDisplayStatesFromAssemblies(ref StreamWriter debugger) {
-            DateTime now = DateTime.Now;
-            //Obtain the configurations to copy and paste the display states to and from, respectively, by looking at the combo boxes in the WinForms GUI.
-            Configuration copiedConfig = (Configuration)copiedDoc.GetConfigurationByName(copiedConfigComboBox.SelectedItem.ToString());
-            Configuration pastedConfig = (Configuration)pastedDoc.GetConfigurationByName(pastedConfigComboBox.SelectedItem.ToString());
+        /// <param name="debugger"></param>
+        private void CopyDisplayStatesFromAssemblies(ref StreamWriter debugger) {
+            DateTime now = DateTime.Now; //Get current time for timer purposes
 
-            //Get Selection Tools from the pasted Document
-            SelectionMgr swSelectionMgr = (SelectionMgr)pastedDoc.SelectionManager;
-            SelectData swSelectData = (SelectData)swSelectionMgr.CreateSelectData();
-
-            string[] copiedDisplayStateNames = (string[])copiedConfig.GetDisplayStates(); //obtain the names of the display states we're going to copy
-            object oComponents = null; //this variable is simply a temporary one that is passed by reference to the 
-                                       //Configuration.GetDisplayStateComponentVisibility() method to obtain the components of that configuration
-
-            copiedDoc.ShowConfiguration2(copiedConfig.Name); //switch to the configuration that we're copying display states from.
-            int[] copiedConfigDisplayStateVisibilities = (int[])copiedConfig.GetDisplayStateComponentVisibility(copiedDisplayStateNames[0], false, false, out oComponents); //get component visibility AND get components
-            object[] copiedComponents = (object[])oComponents; //since oComponents is passed by reference in GetDisplayStateComponentVisibility, it can now be cast to an array containing our components
-            int[] copiedConfigSuppressedComponents = new int[copiedComponents.Length]; //instantiate a new array to hold the suppression states for each component
-            for (int i = 0; i < copiedComponents.Length; i++) { //for each component, get the suppression state
-                copiedConfigSuppressedComponents[i] = ((Component2)copiedComponents[i]).GetSuppression(); //THE SOLIDWORKS 2018 ....sldworks.dll DOES NOT HAVE GetSuppression2(), BUT 2019 DOES
-            }
-
-            /*                                                      Get components of the pasted config
-             *
-             * First, switch to the pasted configuration. If we do NOT switch to the pasted configuration and stay on the
-             * copied configuration, when we go to get the components in the pasted configuration, even though
-             * we've listed the name of a pastedConfig display state, we will still be getting components and their
-             * visibilities from the active configuration (which would be the copied one). In fact, if we don't
-             * switch and the pastedConfig display state name we pass in is not a valid display state name for the
-             * active configuration, then oComponents will be set to null.
-             */
-            pastedDoc.ShowConfiguration2(pastedConfig.Name); //Switch to pasted configuration
-
-            //Now that the pastedConfig is open, we can get the components of the pasted config and put them into a dictionary by name
-            pastedConfig.GetDisplayStateComponentVisibility(((string[])(pastedConfig.GetDisplayStates()))[0], false, false, out oComponents); //no need to save component visibility in a new display state,
-                                                                                                                                              //The point of this line is to get the pastedConfig components
-            /*
-             * Let's create a Dictionary to store the key-value pair <Key, Value> = <string, object> = <"SolidWorks Component Name", "SolidWorks COM object as object class">
-             *
-             * The reason I'm using a Dictionary here as opposed to a regular array is because this method is supposed to work for different assembly files, and they
-             * will most likely not have the same parts within each other; we need to make sure that we only want to set the visibilities and suppression states of
-             * components/parts that are common between the configurations, so, we must first check whether a component/part exists in the pasted configuration before
-             * changing its visibility or suppression state. The easiest way to do this is with a dictionary (same data structure as a "HashMap/HashTable" in Java),
-             * because a Dictionary has O(1) (fastest) lookup time. Also, it is convenient to store the Components (which at this point are COM Objects because we
-             * have not yet casted them to a Component2 type yet) in a key-value pair with the key being the component's name as a string and the value being the
-             * uncasted COM object.
-             */
-            object[] pastedComps = (object[]) oComponents;
-            Dictionary<string, ComponentAndVisibilityPair> pastedConfigDictionaryOfComponents = new Dictionary<string, ComponentAndVisibilityPair>(pastedComps.Length);
-            foreach (object o in pastedComps) {
-                try {
-                    pastedConfigDictionaryOfComponents.Add(((Component2) o).Name2, new ComponentAndVisibilityPair(o, -1));
-                }
-                catch (Exception ex) {
-                    debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
-                }
-            }
-
-            //Here we iterate through the copied Components and apply their suppression states to those common components/parts in the pasted configuration
-            //Suppressed components/parts are applied to a configuration, not specific display states; in other words, if you suppress a component in one
-            //display state, all other display states will make that component suppressed as well (this is a SolidWorks feature, not something I coded).
-            //Because of this, we only want to check and apply suppression states once, not for every display state.
-            /* for (int i = 0; i < copiedComponents.Length; i++) {
-
-                 //Check to see if the copied component exists as a part in the pasted configuration; if so, then set the suppression state to what is was in the copied config.
-                 if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2)copiedComponents[i]).Name2)) {
-                     ((Component2) pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2]).SetSuppression2(copiedConfigSuppressedComponents[i]);
-                 } //else the copied component does not exist in the pasted assembly document; do nothing
-             }*/
-
-            //This big bad foreach loop is what creates the new display states in the pasted configurations and sets the visibilities of their components
-            HashSet<Component2> componentsToShow;
-            string[] componentBreakdown;
-            bool flag;
-            foreach (string displayStateName in copiedDisplayStateNames) {
-                debugger.WriteLine($"{DateTime.Now}: {displayStateName.ToUpper()}");
-
-
-
-                copiedDoc.ShowConfiguration2(copiedConfig.Name); //open copied configuration so we may get the display state visibilities of that configuration.
-                copiedConfigDisplayStateVisibilities = (int[])copiedConfig.GetDisplayStateComponentVisibility(displayStateName, false, false, out oComponents); //no need to save oComponents this time
-
-                pastedDoc.ShowConfiguration2(pastedConfig.Name); //show pasted configuration so we may create a new display state for it
-                pastedConfig.CreateDisplayState($"{displayStateName} copy"); //create a new display state in the pasted config
-                pastedConfig.ApplyDisplayState($"{displayStateName} copy"); //apply this new display state so we may apply the appropriate visibilities to its components
-
-                #region please work on this
-                pastedConfig.GetDisplayStateComponentVisibility(((string[]) pastedConfig.GetDisplayStates())[0], false, false, out oComponents); //just here for components, not component visibilities
-                pastedComps = (object[])oComponents;
-                pastedConfigDictionaryOfComponents.Clear(); //Clear so the next iteration may have a cleared Dictionary.
-                
-                #endregion
-
-                componentsToShow = new HashSet<Component2>();
-                for (int i = 0; i < copiedComponents.Length; i++) { //for each component, get their visibility
-                    pastedConfigDictionaryOfComponents.Add(((Component2)pastedComps[i]).Name2, new ComponentAndVisibilityPair(pastedComps[i], copiedConfigDisplayStateVisibilities[i]));
-                    debugger.WriteLine($"{DateTime.Now}: {((Component2)pastedComps[i]).Name2}: \t{copiedConfigDisplayStateVisibilities[i]}\t {((Component2)copiedComponents[i]).Name2}");
-                    flag = true;
-                    
-
-
-
-                    if (pastedConfigDictionaryOfComponents.ContainsKey(((Component2) copiedComponents[i]).Name2)) {
-                        //check if the component from the copied config exists in the pasted config
-                        switch (copiedConfigDisplayStateVisibilities[i]) {
-                            case 0: //check if the component visibility is 0 (hidden) so that we may select the component for it to be hidden at the end
-                                ((Component2)pastedConfigDictionaryOfComponents[((Component2)copiedComponents[i]).Name2].Component).Select4(true, swSelectData, false);
-                                break;
-                            case 1: //else, show it at the end
-                                
-
-
-
-                                componentBreakdown = ((Component2) copiedComponents[i]).Name2.Split('/');
-                                
-                                for (int index = componentBreakdown.Length - 1; index > 0;) {
-                                    if (pastedConfigDictionaryOfComponents[componentBreakdown[--index]].GetVisibility() == 0) {
-                                        flag = false;
-                                        break;
-                                    }
-                                }
-
-                                if (flag) {
-                                    componentsToShow.Add(
-                                        (Component2) pastedConfigDictionaryOfComponents[
-                                            ((Component2) copiedComponents[i]).Name2].Component);
-                                }
-
-                                break;
-                        }
-                    }
-                }
-                pastedDoc.HideComponent2(); //Hide all of the selected components in this display state
-                pastedDoc.ClearSelection2(true); //Deselect all components
-
-
-                //Now we must show all the components with a visibility state of 1
-                if (componentsToShow.Count != 0) {
-                    foreach (Component2 component in componentsToShow) {
-                        component.Select4(true, swSelectData, false);
-                    }
-
-                    pastedDoc.ShowComponent2(); //Show all components
-                    pastedDoc.ClearSelection2(true); //Deselect all components
-                }
-            }
-            MessageBox.Show($"DONE\n Operation took {(DateTime.Now - now).TotalSeconds} seconds");
-            this.Close();
-        }
-
-
-
-
-
-
-
-
-
-
-        private void button1_Click(object sender, EventArgs e) {
-            StreamWriter debugger =
-                new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\DebugOutput.txt");
-            debugger.AutoFlush = true;
-            try {
-                button1_help(ref debugger);
-            } catch(Exception ex) {
-                debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
-            } finally {
-                debugger.Close();
-            }
-
-            
-        }
-
-        private void button1_help(ref StreamWriter debugger) {
-            DateTime now = DateTime.Now;
+            //get the configurations we're copying display states from and too
             Configuration copiedConfig = (Configuration)copiedDoc.GetConfigurationByName(copiedConfigComboBox.SelectedItem.ToString());
             Configuration pastedConfig = (Configuration)pastedDoc.GetConfigurationByName(pastedConfigComboBox.SelectedItem.ToString());
             string[] copiedDisplayStateNames = (string[])copiedConfig.GetDisplayStates(); //obtain the names of the display states we're going to copy
-            
+
             //Get Selection Tools from the pasted Document
             SelectionMgr swSelectionMgr = (SelectionMgr)pastedDoc.SelectionManager;
             SelectData swSelectData = (SelectData)swSelectionMgr.CreateSelectData();
 
             Component2 tempComp;
-            Dictionary<string, int> dictOfCopiedComps = new Dictionary<string, int>();
-            HashSet<Component2> componentsToShow = new HashSet<Component2>();
-            foreach (string displayStateName in copiedDisplayStateNames) {
+            Dictionary<string, int> dictOfCopiedComps = new Dictionary<string, int>(); //(key, value) = <string, int> = <component name, component visibility>
+            HashSet<Component2> componentsToShow = new HashSet<Component2>(); //to keep track of components that need to be made visible
+            foreach (string displayStateName in copiedDisplayStateNames) { //for each display state
                 debugger.WriteLine(displayStateName.ToUpper());
                 copiedDoc.ShowConfiguration2(copiedConfig.Name); //switch to the configuration that we're copying display states from.
                 copiedConfig.ApplyDisplayState(displayStateName); //apply new display state to copy
 
-                //Get component Visibilities
+                //Get component Visibilities of copying configuration
                 object[] temp = copiedConfig.GetRootComponent3(true).GetChildren();
-                AddComponents(temp, ref debugger);
-                    //Apply pasted config
+                AddComponents(temp, ref debugger); //recursively add to dictOfComponents
+
+                
                 pastedDoc.ShowConfiguration2(pastedConfig.Name); //show pasted configuration so we may create a new display state for it
                 pastedConfig.CreateDisplayState($"{displayStateName} copy"); //create a new display state in the pasted config
                 pastedConfig.ApplyDisplayState($"{displayStateName} copy"); //apply this new display state so we may apply the appropriate visibilities to its components
                 debugger.WriteLine("We got here");
+                //If we do NOT switch to the pasted configuration and stay on the copied configuration, when we go to get the components in
+                //the pasted configuration, even though we've listed the name of a pastedConfig display state, we will still be getting
+                //components and their visibilities from the active configuration (which would be the copied one).
+                 
+
+
+                //recursively select components to be hidden by passing the root component of the pasted configuration. Any component that needs to be visible
+                //instead of hidden is added to the componentsToShow HashSet.
                 TraverseAssemblyAndSelectComponentsToBeHidden(pastedConfig.GetRootComponent3(true).GetChildren(), ref debugger);
 
                 pastedDoc.HideComponent2(); //Hide all of the selected components in this display state
@@ -638,35 +440,42 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
                 //Now we must show all the components with a visibility state of 1
                 if (componentsToShow.Count != 0) {
-                    foreach (Component2 component in componentsToShow) {
+                    foreach (Component2 component in componentsToShow) { //select all components in the HashSet
                         component.Select4(true, swSelectData, false);
                     }
 
-                    pastedDoc.ShowComponent2(); //Show all components
+                    pastedDoc.ShowComponent2(); //Show all components that are selected
                     pastedDoc.ClearSelection2(true); //Deselect all components
                 }
 
                 //clear data structures
                 dictOfCopiedComps.Clear();
                 componentsToShow.Clear();
+            } //end foreach loop
+            /*
+            try { //play a nice little jingle when it is done in case anybody has this running in the background.
+                SoundPlayer completedSound = new SoundPlayer(@"\\orion\manuf_test\SolidWorks Add-In Code\Resources\Completion Sound.wav");
+                completedSound.Play();
+            } catch (ArgumentException ex) {
+                Debug.Print("Cannot locate sound file");
             }
-
-            MessageBox.Show($"DONE\n Operation took {(DateTime.Now - now).TotalSeconds} seconds");
-            this.Close();
-
-
+            */
+            MessageBox.Show($"\t\tSuccess! \nOperation took {(DateTime.Now - now).TotalSeconds} seconds ({(DateTime.Now - now).Minutes} mins and {(DateTime.Now - now).TotalSeconds % 60} seconds)");
+            this.Close(); //close this WinForm GUI.
 
 
 
-            
+
+
+
             void AddComponents(object[] children, ref StreamWriter debugger2) {
                 for (int i = 0; i < children.Length; i++) { //traverse children
                     tempComp = (Component2)children[i];
                     debugger2.WriteLine($"{DateTime.Now}: ADDING: {tempComp.Name2}");
-                    if (tempComp.GetChildren() != null && tempComp.Visible == 1) {                     //if children[i] is an assembly file AND it is visible,
+                    if (IsAssemblyFile(tempComp) && tempComp.Visible == (int)swComponentVisibilityState_e.swComponentVisible) {                     //if children[i] is an assembly file AND it is visible,
                         dictOfCopiedComps.Add(tempComp.Name2, tempComp.Visible);
                         AddComponents(tempComp.GetChildren(), ref debugger2); //then we need to go deeper :)
-                    } else if (tempComp.GetChildren() != null) {
+                    } else {
                         dictOfCopiedComps.Add(tempComp.Name2, tempComp.Visible);
                     }
                 }
@@ -675,40 +484,46 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
             void TraverseAssemblyAndSelectComponentsToBeHidden(object[] children, ref StreamWriter debugger2) {
                 for (int i = 0; i < children.Length; i++) { //traverse children
-                    debugger2.WriteLine($"{DateTime.Now}: EVAULATING: {((Component2)children[i]).Name2}");
+                    debugger2.WriteLine($"{DateTime.Now}: EVALUATING: {((Component2)children[i]).Name2}");
 
-                    if (((Component2)children[i]).GetChildren() != null) {                     //if children[i] is an assembly file AND it is visible,
+                    if (IsAssemblyFile((Component2)children[i])) {                     //if children[i] is an assembly file AND it is visible,
                         TraverseAssemblyAndSelectComponentsToBeHidden(((Component2)children[i]).GetChildren(), ref debugger2); //then we need to go deeper :)
                     }
-
-                    //If the copiedConfig contains the current, pastedconfig's part
+                    //If the copiedConfig contains the current, pastedConfig's part
                     if (dictOfCopiedComps.ContainsKey(((Component2)children[i]).Name2)) {
-                        if (dictOfCopiedComps[((Component2)children[i]).Name2] == 0) { //if the part in the copied config is hidden, then select it to be hidden later
+                        if (dictOfCopiedComps[((Component2)children[i]).Name2] == (int) swComponentVisibilityState_e.swComponentHidden) { //if the part in the copied config is hidden, then select it to be hidden later
                             //debugger2.WriteLine($"{DateTime.Now}: {((Component2)children[i]).Name2} \t\tHidden");
                             ((Component2)children[i]).Select4(true, swSelectData, false);
                         } else { //if the part is showing, mark it to be shown later
-                           // debugger2.WriteLine($"{DateTime.Now}: {((Component2)children[i]).Name2} \t\tvisible");
+                                 // debugger2.WriteLine($"{DateTime.Now}: {((Component2)children[i]).Name2} \t\tvisible");
                             componentsToShow.Add((Component2)children[i]);
                         }
                     }
-                   
+
                 }
+            }
+        
+
+            /*
+             * We have to check if the components children array is greater than zero because, for some odd reason,
+             * sometimes part files DO have non-null GetChildren arrays of length zero???? Not sure why, but that's why the
+             * tempComp.GetChildren().Length > 0       is in the if-statement
+             *
+             * We have to check if the children are null first because sometimes the part files do return a null GetChildren(),
+             * and a NullReferenceException will be thrown if we try and do component.GetChildren().Length, so that first expression
+             * avoids that.
+             */
+            bool IsAssemblyFile(Component2 component) {
+                return component.GetChildren() != null && component.GetChildren().Length > 0;
             }
         }
 
-        
+
 
 
         #endregion
     }
 
-#if false  //code that I don't want to delete because it took forever to learn
-//document is a variable that is declared at the top of the class and initialized to
-// private ModelDoc2 document; //AT VERY TOP OF CLASS NOT INSIDE ANYTHING
-
-
-
-// document = (ModelDoc2)TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc; //in CONSTRUCTOR
 
 
 
@@ -718,50 +533,271 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
 
 
+    public class WaitingForm : Form {
+        public WaitingForm() {
+            InitializeComponent();
+        }
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
 
-ModelDocExtension modelExtension = (ModelDocExtension)document.Extension; 
-//modelExtension.MultiSelect2(oComponents, true, swSelectData);
-bool temp;
-string nameOfCurrentDocument = document.GetPathName();
-nameOfCurrentDocument = nameOfCurrentDocument.Substring(nameOfCurrentDocument.LastIndexOf('\\') + 1,
-    nameOfCurrentDocument.LastIndexOf('.') - (nameOfCurrentDocument.LastIndexOf('\\') + 1));
-foreach (object o in copiedComponents) {
-    /*
-     * The SelectByID2 method selects a type of entity (a list of these entities is described by the swSelectType_e enumeration whose enum values
-     * are listed here: https://bit.ly/3ibUBW7) in a SolidWorks document. The header of this method is as follows:
-     * bool SelectByID2(string Name, string Type, double X, double Y, double Z, bool Append, int Mark, Callout Callout, int SelectOption)
-     *
-     * @param Name           The name of the object to select. THE FORMAT FOR THE NAME OF AN OBJECT TO ADD IS
-     *                       "<Name of Feature>@<Name of component>@<name of file it resides in>". For example, "9CRJ0412P5J001-3@Test Assm" (if you want the component) or
-     *                       "The name of some feature in this part@9CRJ0412P5J001-3@Test Assm" (if you want a feature). The problem with this method is that I cannot figure out how
-     *                       to specify the name for a component within a subassembly inside an assembly. This terminology does not work for that
-     * @param Type           Type of object (uppercase) as defined in swSelectType_e or an empty string (see doc page for what empty string means)
-     * @param X              X location of the object (no idea what the location is relative too; where is the origin of this coordinate system????)
-     * @param Y              Y location of the object (no idea what the location is relative too; where is the origin of this coordinate system????)
-     * @param Z              Z location of the object (no idea what the location is relative too; where is the origin of this coordinate system????)
-     * @param Append         If...	    An, if entity is...	        Then...
-                             True	    Not already selected	    Entity is appended to the current selection list
-                                            Already selected	    Entity is removed from the current selection list
-                             False	    Not already selected	    Current selection is cleared and then the entity is put on the list
-                                            Already selected	    Current selection list remains the same
-     * @param Mark           "Value that you want to use as a mark; this value is used by other functions that require ordered selection (see https://bit.ly/3rIIC5x)"
-     *                       Honestly, I don't know what this parameter does
-     * @param Callout        No idea what this parameter is does
-     * @param SelectOption   No idea what this parameter is does
-     *
-     * NOTE: if you specify the name and type of the object (as opposed to entering an empty string), then you can put all zeros for X, Y, and Z location.
-     */
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing) {
+            if (disposing && (components != null)) {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
 
-    string[] componentNameElements = ((Component2)o).Name.Split('/');
+        #region Windows Form Designer generated code
 
-    StringBuilder componentName = new StringBuilder(componentNameElements.Length);
-    for (int i = componentNameElements.Length; i > 0; /*loop variable i is decremented in loop body*/) {
-        componentName.Append(componentNameElements[--i] + "@");
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent() {
+            this.label = new System.Windows.Forms.Label();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.SuspendLayout();
+            // 
+            // label
+            // 
+            this.label.AutoSize = true;
+            this.label.Location = new System.Drawing.Point(57, 37);
+            this.label.Name = "label";
+            this.label.Size = new System.Drawing.Size(278, 13);
+            this.label.TabIndex = 0;
+            this.label.Text = "Don\'t go anywhere! Looking through suppression states...";
+            // 
+            // progressBar
+            // 
+            this.progressBar.Location = new System.Drawing.Point(27, 90);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(333, 23);
+            this.progressBar.TabIndex = 1;
+            // 
+            // WaitingForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(400, 139);
+            this.Controls.Add(this.progressBar);
+            this.Controls.Add(this.label);
+            this.Name = "WaitingForm";
+            this.Text = "WaitingForm";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Label label;
+        private System.Windows.Forms.ProgressBar progressBar;
     }
 
-    componentName.Append(nameOfCurrentDocument);
-    // temp = modelExtension.SelectByID2(componentName.ToString(), "COMPONENT", 0, 0, 0, true, 0, null, 0);
-    //debugger.WriteLine($"{DateTime.Now}: {componentName}: \t {temp}");
-}
-#endif
+
+    //Here we iterate through the copied Components and apply their suppression states to those common components/parts in the pasted configuration
+    //Suppressed components/parts are applied to a configuration, not specific display states; in other words, if you suppress a component in one
+    //display state, all other display states will make that component suppressed as well (this is a SolidWorks feature, not something I coded).
+    //Because of this, we only want to check and apply suppression states once, not for every display state.
+
+
+    class ReplaceSuppressedComponentsForm : Form {
+
+        public ReplaceSuppressedComponentsForm() {
+            InitializeComponent();
+
+            //Centering the Form in the middle of the screen
+            this.Location = new System.Drawing.Point((Screen.FromControl(this).Bounds.Width - this.Width) / 2,
+                (Screen.FromControl(this).Bounds.Height / 7));
+        }
+
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing) {
+            if (disposing && (components != null)) {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent() {
+            this.suppressedComponentComboBox = new System.Windows.Forms.ComboBox();
+            this.ReplacementComponentComboBox = new System.Windows.Forms.ComboBox();
+            this.suppressedComponentLabel = new System.Windows.Forms.Label();
+            this.replacementComponentLabel = new System.Windows.Forms.Label();
+            this.addReplacementLabel = new System.Windows.Forms.Label();
+            this.suppressionTable = new System.Windows.Forms.DataGridView();
+            this.runButton = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
+            this.addReplacementButton = new System.Windows.Forms.Button();
+            this.deleteReplacementRow = new System.Windows.Forms.Button();
+            this.runWithoutThisFormLabel = new System.Windows.Forms.Button();
+            this.deleteReplacementLabel = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.suppressionTable)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // suppressedComponentComboBox
+            // 
+            this.suppressedComponentComboBox.FormattingEnabled = true;
+            this.suppressedComponentComboBox.Location = new System.Drawing.Point(27, 56);
+            this.suppressedComponentComboBox.Name = "suppressedComponentComboBox";
+            this.suppressedComponentComboBox.Size = new System.Drawing.Size(415, 21);
+            this.suppressedComponentComboBox.TabIndex = 0;
+            // 
+            // ReplacementComponentComboBox
+            // 
+            this.ReplacementComponentComboBox.FormattingEnabled = true;
+            this.ReplacementComponentComboBox.Location = new System.Drawing.Point(537, 56);
+            this.ReplacementComponentComboBox.Name = "ReplacementComponentComboBox";
+            this.ReplacementComponentComboBox.Size = new System.Drawing.Size(398, 21);
+            this.ReplacementComponentComboBox.TabIndex = 1;
+            // 
+            // suppressedComponentLabel
+            // 
+            this.suppressedComponentLabel.AutoSize = true;
+            this.suppressedComponentLabel.Location = new System.Drawing.Point(24, 38);
+            this.suppressedComponentLabel.Name = "suppressedComponentLabel";
+            this.suppressedComponentLabel.Size = new System.Drawing.Size(200, 13);
+            this.suppressedComponentLabel.TabIndex = 2;
+            this.suppressedComponentLabel.Text = "Suppressed component in configuration: ";
+            // 
+            // replacementComponentLabel
+            // 
+            this.replacementComponentLabel.AutoSize = true;
+            this.replacementComponentLabel.Location = new System.Drawing.Point(534, 38);
+            this.replacementComponentLabel.Name = "replacementComponentLabel";
+            this.replacementComponentLabel.Size = new System.Drawing.Size(92, 13);
+            this.replacementComponentLabel.TabIndex = 3;
+            this.replacementComponentLabel.Text = "Replace  in   with ";
+            // 
+            // addReplacementLabel
+            // 
+            this.addReplacementLabel.AutoSize = true;
+            this.addReplacementLabel.Location = new System.Drawing.Point(24, 106);
+            this.addReplacementLabel.Name = "addReplacementLabel";
+            this.addReplacementLabel.Size = new System.Drawing.Size(371, 13);
+            this.addReplacementLabel.TabIndex = 4;
+            this.addReplacementLabel.Text = "Once both drop-down menus above are populated, click \"Add Replacement\"";
+            // 
+            // suppressionTable
+            // 
+            this.suppressionTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.suppressionTable.Location = new System.Drawing.Point(27, 164);
+            this.suppressionTable.Name = "suppressionTable";
+            this.suppressionTable.Size = new System.Drawing.Size(908, 447);
+            this.suppressionTable.TabIndex = 5;
+            // 
+            // runButton
+            // 
+            this.runButton.Location = new System.Drawing.Point(844, 643);
+            this.runButton.Name = "runButton";
+            this.runButton.Size = new System.Drawing.Size(121, 45);
+            this.runButton.TabIndex = 6;
+            this.runButton.Text = "Copy Display States";
+            this.runButton.UseVisualStyleBackColor = true;
+            // 
+            // cancelButton
+            // 
+            this.cancelButton.Location = new System.Drawing.Point(591, 654);
+            this.cancelButton.Name = "cancelButton";
+            this.cancelButton.Size = new System.Drawing.Size(75, 23);
+            this.cancelButton.TabIndex = 7;
+            this.cancelButton.Text = "Cancel";
+            this.cancelButton.UseVisualStyleBackColor = true;
+            // 
+            // addReplacementButton
+            // 
+            this.addReplacementButton.Location = new System.Drawing.Point(537, 101);
+            this.addReplacementButton.Name = "addReplacementButton";
+            this.addReplacementButton.Size = new System.Drawing.Size(164, 23);
+            this.addReplacementButton.TabIndex = 9;
+            this.addReplacementButton.Text = "Add Replacement";
+            this.addReplacementButton.UseVisualStyleBackColor = true;
+            // 
+            // deleteReplacementRow
+            // 
+            this.deleteReplacementRow.Location = new System.Drawing.Point(27, 654);
+            this.deleteReplacementRow.Name = "deleteReplacementRow";
+            this.deleteReplacementRow.Size = new System.Drawing.Size(75, 23);
+            this.deleteReplacementRow.TabIndex = 10;
+            this.deleteReplacementRow.Text = "Delete Replacement";
+            this.deleteReplacementRow.UseVisualStyleBackColor = true;
+            // 
+            // runWithoutThisFormLabel
+            // 
+            this.runWithoutThisFormLabel.Location = new System.Drawing.Point(701, 643);
+            this.runWithoutThisFormLabel.Name = "runWithoutThisFormLabel";
+            this.runWithoutThisFormLabel.Size = new System.Drawing.Size(113, 45);
+            this.runWithoutThisFormLabel.TabIndex = 11;
+            this.runWithoutThisFormLabel.Text = "Run Without Replacement Parts";
+            this.runWithoutThisFormLabel.UseVisualStyleBackColor = true;
+            // 
+            // deleteReplacementLabel
+            // 
+            this.deleteReplacementLabel.AutoSize = true;
+            this.deleteReplacementLabel.Location = new System.Drawing.Point(24, 614);
+            this.deleteReplacementLabel.Name = "deleteReplacementLabel";
+            this.deleteReplacementLabel.Size = new System.Drawing.Size(41, 13);
+            this.deleteReplacementLabel.TabIndex = 12;
+            this.deleteReplacementLabel.Text = "werwer";
+            // 
+            // ReplaceSuppressedComponentsForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(977, 700);
+            this.Controls.Add(this.deleteReplacementLabel);
+            this.Controls.Add(this.runWithoutThisFormLabel);
+            this.Controls.Add(this.deleteReplacementRow);
+            this.Controls.Add(this.addReplacementButton);
+            this.Controls.Add(this.cancelButton);
+            this.Controls.Add(this.runButton);
+            this.Controls.Add(this.suppressionTable);
+            this.Controls.Add(this.addReplacementLabel);
+            this.Controls.Add(this.replacementComponentLabel);
+            this.Controls.Add(this.suppressedComponentLabel);
+            this.Controls.Add(this.ReplacementComponentComboBox);
+            this.Controls.Add(this.suppressedComponentComboBox);
+            this.Name = "ReplaceSuppressedComponentsForm";
+            this.Text = "ReplaceSuppressedComponentsForm";
+            ((System.ComponentModel.ISupportInitialize)(this.suppressionTable)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        private System.Windows.Forms.ComboBox suppressedComponentComboBox;
+        private System.Windows.Forms.ComboBox ReplacementComponentComboBox;
+        private System.Windows.Forms.Label suppressedComponentLabel;
+        private System.Windows.Forms.Label replacementComponentLabel;
+        private System.Windows.Forms.Label addReplacementLabel;
+        private System.Windows.Forms.DataGridView suppressionTable;
+        private System.Windows.Forms.Button runButton;
+        private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.Button addReplacementButton;
+        private System.Windows.Forms.Button deleteReplacementRow;
+        private System.Windows.Forms.Button runWithoutThisFormLabel;
+        private System.Windows.Forms.Label deleteReplacementLabel;
+
+        #endregion
+    }
 }

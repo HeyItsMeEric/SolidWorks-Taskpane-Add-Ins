@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swpublished;
+using SolidWorks.Interop.swconst;
 
 namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
@@ -100,7 +101,14 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             //Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             //Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new CopyDisplayStatesForm());
+
+            //ensuring that the current open model is an assembly or part document
+            if (((ModelDoc2)TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc).GetType() == (int)swDocumentTypes_e.swDocDRAWING) {
+                MessageBox.Show("This function can only be used with assembly and part files!",
+                    "Invalid Document Type", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } else {
+                Application.Run(new CopyDisplayStatesForm());
+            }
         }
     }
 

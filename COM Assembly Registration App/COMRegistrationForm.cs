@@ -50,13 +50,16 @@ namespace COM_Assembly_Registration_App {
         /// </summary>
         public COMRegistrationForm() {
             InitializeComponent();
+
+            //Centering the Form in the middle of the screen
+            this.Location = new System.Drawing.Point((Screen.FromControl(this).Bounds.Width - this.Width) / 2,
+                (Screen.FromControl(this).Bounds.Height / 7));
+
             if (!File.Exists(@"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe")) return;
             regAsmTextBox.Text = @"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe";
             autoDetectionLabel.Visible = true;
             
-            //Centering the Form in the middle of the screen
-            this.Location = new System.Drawing.Point((Screen.FromControl(this).Bounds.Width - this.Width) / 2,
-                                                     (Screen.FromControl(this).Bounds.Height / 7));
+            
         }
 
         /// <summary>
