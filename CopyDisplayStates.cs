@@ -10,7 +10,9 @@ using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Media;
 using System.Windows.Forms;
 using System.Security;
 
@@ -24,6 +26,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         private OpenFileDialog openFileDialog;
         private string copiedFilePath;
         private string pastedFilePath;
+
 
         //SolidWorks API instance variables
         private Configuration[] copiedConfigArr;
@@ -134,7 +137,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             // copyButton
             // 
             this.copyButton.Font = new System.Drawing.Font("Century Gothic", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.copyButton.Location = new System.Drawing.Point(244, 254);
+            this.copyButton.Location = new System.Drawing.Point(483, 257);
             this.copyButton.Name = "copyButton";
             this.copyButton.Size = new System.Drawing.Size(197, 35);
             this.copyButton.TabIndex = 2;
@@ -390,6 +393,15 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             }
         }
 
+        internal struct DisplayStateSuppressionStateValues {
+            int DisplayStateValue { get; set; }
+            int SuppressionStateValue { get; set; }
+
+            public DisplayStateSuppressionStateValues(int display, int suppression) {
+                DisplayStateValue = display;
+                SuppressionStateValue = suppression;
+            }
+        }
 
 
         /// <summary>
@@ -397,12 +409,72 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// </summary>
         /// <param name="debugger"></param>
         private void CopyDisplayStatesFromAssemblies(ref StreamWriter debugger) {
-            DateTime now = DateTime.Now; //Get current time for timer purposes
-
             //get the configurations we're copying display states from and too
             Configuration copiedConfig = (Configuration)copiedDoc.GetConfigurationByName(copiedConfigComboBox.SelectedItem.ToString());
             Configuration pastedConfig = (Configuration)pastedDoc.GetConfigurationByName(pastedConfigComboBox.SelectedItem.ToString());
             string[] copiedDisplayStateNames = (string[])copiedConfig.GetDisplayStates(); //obtain the names of the display states we're going to copy
+
+            #region Deal with suppressed component replacements
+            copiedDoc.ShowConfiguration2(copiedConfig.Name); //show copied config
+            copiedConfig.ApplyDisplayState(copiedDisplayStateNames[0]); //show any display state (array is guaranteed to have index 0)
+            Dictionary<string, int> dictOfSuppressionStates = new Dictionary<string, int>();
+            GetSuppressionStates(copiedConfig.GetRootComponent3(true).GetChildren(), ref debugger);
+
+            //Search through the pasted configuration for a list of all parts
+            pastedDoc.ShowConfiguration2(pastedConfig.Name);
+            ReplaceSuppressedComponentsForm replaceForm = new ReplaceSuppressedComponentsForm(copiedConfig, pastedConfig, copiedDoc.GetTitle());
+            GetComponents(pastedConfig.GetRootComponent3(true).GetChildren(), ref debugger);
+            foreach (string name in dictOfSuppressionStates.Keys) {
+                replaceForm.AddItemToCombobox(name, "Suppressed Components");
+            }
+            Dictionary<string, string> suppressedComponentReplacement = new Dictionary<string, string>(); //<k, v> = <name of component in pastedDoc, name of component to apply visibility of>
+            replaceForm.ShowDialog();
+            replaceForm.GetTableData(ref suppressedComponentReplacement);
+            foreach (string s in suppressedComponentReplacement.Keys) {
+                debugger.WriteLine(s);
+            }
+            if (replaceForm.UserQuit) return;
+
+
+            Component2 tempCompSup;
+            void GetSuppressionStates(object[] children, ref StreamWriter debugger2) {
+                foreach (object component in children) {
+                    tempCompSup = (Component2)component;
+                    if (tempCompSup.GetSuppression() == (int) swComponentSuppressionState_e.swComponentSuppressed) {  //if the component is suppressed then add it
+                        dictOfSuppressionStates.Add(tempCompSup.Name2, tempCompSup.GetSuppression());
+                    } else if (IsAssemblyFile(tempCompSup)) { //if the component is NOT suppressed and is an assembly file, then go deeper.
+                        GetSuppressionStates(tempCompSup.GetChildren(), ref debugger2);
+                    }
+                }
+            }
+
+            Component2 tempCompSup2;
+            void GetComponents(object[] children, ref StreamWriter debugger2) {
+                foreach (object component in children) {
+                    tempCompSup2 = (Component2) component;
+                    if (tempCompSup2.GetSuppression() == (int) swComponentSuppressionState_e.swComponentSuppressed) {
+                        if (dictOfSuppressionStates.ContainsKey(tempCompSup2.Name2)) {
+                            dictOfSuppressionStates.Remove(tempCompSup2.Name2);
+                        }
+                    } else if (IsAssemblyFile(tempCompSup2)) { //if not suppressed and an assembly file
+                        replaceForm.AddItemToCombobox(tempCompSup2.Name2, "Replacement Components");
+                        GetComponents(tempCompSup2.GetChildren(), ref debugger2);
+                    } else {
+                        replaceForm.AddItemToCombobox(tempCompSup2.Name2, "Replacement Components");
+                    }
+                }
+            }
+            #endregion
+
+
+
+
+
+
+
+
+
+            DateTime now = DateTime.Now; //Get current time for timer purposes
 
             //Get Selection Tools from the pasted Document
             SelectionMgr swSelectionMgr = (SelectionMgr)pastedDoc.SelectionManager;
@@ -452,15 +524,15 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                 dictOfCopiedComps.Clear();
                 componentsToShow.Clear();
             } //end foreach loop
-            /*
+            
             try { //play a nice little jingle when it is done in case anybody has this running in the background.
-                SoundPlayer completedSound = new SoundPlayer(@"\\orion\manuf_test\SolidWorks Add-In Code\Resources\Completion Sound.wav");
+                SoundPlayer completedSound = new SoundPlayer(@"C:\Windows\Media\Windows Proximity Notification.wav");
                 completedSound.Play();
-            } catch (ArgumentException ex) {
+            } catch (Exception ex) {
                 Debug.Print("Cannot locate sound file");
             }
-            */
-            MessageBox.Show($"\t\tSuccess! \nOperation took {(DateTime.Now - now).TotalSeconds} seconds ({(DateTime.Now - now).Minutes} mins and {(DateTime.Now - now).TotalSeconds % 60} seconds)");
+        
+            MessageBox.Show($"\t\t\t\tSuccess!\nOperation took {(DateTime.Now - now).TotalSeconds} seconds ({(DateTime.Now - now).Minutes} minutes and {(DateTime.Now - now).TotalSeconds % 60} seconds)");
             this.Close(); //close this WinForm GUI.
 
 
@@ -469,10 +541,10 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
 
             void AddComponents(object[] children, ref StreamWriter debugger2) {
-                for (int i = 0; i < children.Length; i++) { //traverse children
-                    tempComp = (Component2)children[i];
+                foreach (object component in children) { //traverse children
+                    tempComp = (Component2)component;
                     debugger2.WriteLine($"{DateTime.Now}: ADDING: {tempComp.Name2}");
-                    if (IsAssemblyFile(tempComp) && tempComp.Visible == (int)swComponentVisibilityState_e.swComponentVisible) {                     //if children[i] is an assembly file AND it is visible,
+                    if (IsAssemblyFile(tempComp) && tempComp.Visible == (int)swComponentVisibilityState_e.swComponentVisible) {  //if children[i] is an assembly file AND it is visible,
                         dictOfCopiedComps.Add(tempComp.Name2, tempComp.Visible);
                         AddComponents(tempComp.GetChildren(), ref debugger2); //then we need to go deeper :)
                     } else {
@@ -481,46 +553,45 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                 }
             }
 
-
+            int visibility;
             void TraverseAssemblyAndSelectComponentsToBeHidden(object[] children, ref StreamWriter debugger2) {
-                for (int i = 0; i < children.Length; i++) { //traverse children
-                    debugger2.WriteLine($"{DateTime.Now}: EVALUATING: {((Component2)children[i]).Name2}");
+                foreach (object component in children) { //traverse children
+                    //debugger2.WriteLine($"{DateTime.Now}: EVALUATING: {((Component2)component).Name2}");
 
-                    if (IsAssemblyFile((Component2)children[i])) {                     //if children[i] is an assembly file AND it is visible,
-                        TraverseAssemblyAndSelectComponentsToBeHidden(((Component2)children[i]).GetChildren(), ref debugger2); //then we need to go deeper :)
+                    if (IsAssemblyFile((Component2)component)) {                     //if children[i] is an assembly file AND it is visible,
+                        TraverseAssemblyAndSelectComponentsToBeHidden(((Component2)component).GetChildren(), ref debugger2); //then we need to go deeper :)
                     }
                     //If the copiedConfig contains the current, pastedConfig's part
-                    if (dictOfCopiedComps.ContainsKey(((Component2)children[i]).Name2)) {
-                        if (dictOfCopiedComps[((Component2)children[i]).Name2] == (int) swComponentVisibilityState_e.swComponentHidden) { //if the part in the copied config is hidden, then select it to be hidden later
-                            //debugger2.WriteLine($"{DateTime.Now}: {((Component2)children[i]).Name2} \t\tHidden");
-                            ((Component2)children[i]).Select4(true, swSelectData, false);
+                    if (dictOfCopiedComps.ContainsKey(((Component2)component).Name2)) {
+                        visibility = suppressedComponentReplacement.ContainsKey(((Component2)component).Name2) && dictOfCopiedComps.ContainsKey(suppressedComponentReplacement[((Component2)component).Name2]) ?
+                            dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]] : dictOfCopiedComps[((Component2)component).Name2];
+                        debugger2.Write($"{DateTime.Now}: Apply Visibility {visibility} to {((Component2)component).Name2}. ");
+                        if (suppressedComponentReplacement.ContainsKey(((Component2)component).Name2) && dictOfCopiedComps.ContainsKey(suppressedComponentReplacement[((Component2)component).Name2])) {
+                            debugger2.Write($"THIS IS A REPLACEMENT PART and dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]]: {dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]]}");
+                        }
+                        debugger2.WriteLine($"\t\t{suppressedComponentReplacement.ContainsKey(((Component2)component).Name2)}\t\tand dictOfCopiedComps[((Component2)component).Name2]: {dictOfCopiedComps[((Component2)component).Name2]}");
+                        if (visibility == (int) swComponentVisibilityState_e.swComponentHidden) { //if the part in the copied config is hidden, then select it to be hidden later
+                            ((Component2)component).Select4(true, swSelectData, false);
                         } else { //if the part is showing, mark it to be shown later
-                                 // debugger2.WriteLine($"{DateTime.Now}: {((Component2)children[i]).Name2} \t\tvisible");
-                            componentsToShow.Add((Component2)children[i]);
+                            componentsToShow.Add((Component2)component);
                         }
                     }
-
                 }
             }
-        
-
-            /*
-             * We have to check if the components children array is greater than zero because, for some odd reason,
-             * sometimes part files DO have non-null GetChildren arrays of length zero???? Not sure why, but that's why the
-             * tempComp.GetChildren().Length > 0       is in the if-statement
-             *
-             * We have to check if the children are null first because sometimes the part files do return a null GetChildren(),
-             * and a NullReferenceException will be thrown if we try and do component.GetChildren().Length, so that first expression
-             * avoids that.
-             */
-            bool IsAssemblyFile(Component2 component) {
-                return component.GetChildren() != null && component.GetChildren().Length > 0;
-            }
         }
 
-
-
-
+        /*
+         * We have to check if the components children array is greater than zero because, for some odd reason,
+         * sometimes part files DO have non-null GetChildren arrays of length zero???? Not sure why, but that's why the
+         * tempComp.GetChildren().Length > 0       is in the if-statement
+         *
+         * We have to check if the children are null first because sometimes the part files do return a null GetChildren(),
+         * and a NullReferenceException will be thrown if we try and do component.GetChildren().Length, so that first expression
+         * avoids that.
+         */
+        public static bool IsAssemblyFile(Component2 component) {
+            return component.GetChildren() != null && component.GetChildren().Length > 0;
+        }
         #endregion
     }
 
@@ -528,77 +599,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
 
 
-
-
-
-
-
-    public class WaitingForm : Form {
-        public WaitingForm() {
-            InitializeComponent();
-        }
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
-        private System.ComponentModel.IContainer components = null;
-
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing) {
-            if (disposing && (components != null)) {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent() {
-            this.label = new System.Windows.Forms.Label();
-            this.progressBar = new System.Windows.Forms.ProgressBar();
-            this.SuspendLayout();
-            // 
-            // label
-            // 
-            this.label.AutoSize = true;
-            this.label.Location = new System.Drawing.Point(57, 37);
-            this.label.Name = "label";
-            this.label.Size = new System.Drawing.Size(278, 13);
-            this.label.TabIndex = 0;
-            this.label.Text = "Don\'t go anywhere! Looking through suppression states...";
-            // 
-            // progressBar
-            // 
-            this.progressBar.Location = new System.Drawing.Point(27, 90);
-            this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(333, 23);
-            this.progressBar.TabIndex = 1;
-            // 
-            // WaitingForm
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(400, 139);
-            this.Controls.Add(this.progressBar);
-            this.Controls.Add(this.label);
-            this.Name = "WaitingForm";
-            this.Text = "WaitingForm";
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
-        }
-
-        #endregion
-
-        private System.Windows.Forms.Label label;
-        private System.Windows.Forms.ProgressBar progressBar;
-    }
 
 
     //Here we iterate through the copied Components and apply their suppression states to those common components/parts in the pasted configuration
@@ -608,19 +608,42 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
 
     class ReplaceSuppressedComponentsForm : Form {
+        private Configuration copiedConfig;
+        private Configuration pastedConfig;
+        private Dictionary<string, int> rowItems; //<key, value> = <string, int> = <suppressed component name, row index>
+        public bool UserQuit { get; set; } = false;
+        private StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New Text Document.txt");
 
-        public ReplaceSuppressedComponentsForm() {
+        public ReplaceSuppressedComponentsForm(Configuration copiedConfig, Configuration pastedConfig, string documentName) {
+            debugger.AutoFlush = true;
+            this.copiedConfig = copiedConfig;
+            this.pastedConfig = pastedConfig;
+            this.rowItems = new Dictionary<string, int>();
             InitializeComponent();
-
+            InitializeTable(documentName);
+            suppressionTable.AutoResizeColumns();
             //Centering the Form in the middle of the screen
             this.Location = new System.Drawing.Point((Screen.FromControl(this).Bounds.Width - this.Width) / 2,
                 (Screen.FromControl(this).Bounds.Height / 7));
         }
 
+        private void InitializeTable(string documentName) {
+            this.suppressionTable.ColumnCount = 3;
+            this.suppressionTable.Columns[0].Name = "Index";
+            this.suppressionTable.Columns[1].Name = $"Suppressed Component in {documentName}";
+            this.suppressionTable.Columns[2].Name = "Component to replace the suppressed component with";
+
+            this.suppressionTable.Columns[0].Width = 50;
+            this.suppressionTable.Columns[1].Width = this.suppressionTable.Columns[2].Width = suppressionTable.Width / 2 - this.suppressionTable.Columns[0].Width;
+            this.suppressionTable.Columns[0].Resizable = this.suppressionTable.Columns[1].Resizable =
+                this.suppressionTable.Columns[2].Resizable = DataGridViewTriState.False;
+            this.suppressionTable.MultiSelect = false;
+        }
+
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private readonly System.ComponentModel.IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -650,7 +673,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.cancelButton = new System.Windows.Forms.Button();
             this.addReplacementButton = new System.Windows.Forms.Button();
             this.deleteReplacementRow = new System.Windows.Forms.Button();
-            this.runWithoutThisFormLabel = new System.Windows.Forms.Button();
             this.deleteReplacementLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.suppressionTable)).BeginInit();
             this.SuspendLayout();
@@ -662,6 +684,9 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.suppressedComponentComboBox.Name = "suppressedComponentComboBox";
             this.suppressedComponentComboBox.Size = new System.Drawing.Size(415, 21);
             this.suppressedComponentComboBox.TabIndex = 0;
+            this.suppressedComponentComboBox.SelectedIndexChanged += new System.EventHandler(this.SuppressedComponentComboBoxSelectedIndexChanged);
+            this.suppressedComponentComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            this.suppressedComponentComboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
             // 
             // ReplacementComponentComboBox
             // 
@@ -670,6 +695,8 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.ReplacementComponentComboBox.Name = "ReplacementComponentComboBox";
             this.ReplacementComponentComboBox.Size = new System.Drawing.Size(398, 21);
             this.ReplacementComponentComboBox.TabIndex = 1;
+            this.ReplacementComponentComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            this.ReplacementComponentComboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
             // 
             // suppressedComponentLabel
             // 
@@ -678,7 +705,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.suppressedComponentLabel.Name = "suppressedComponentLabel";
             this.suppressedComponentLabel.Size = new System.Drawing.Size(200, 13);
             this.suppressedComponentLabel.TabIndex = 2;
-            this.suppressedComponentLabel.Text = "Suppressed component in configuration: ";
+            this.suppressedComponentLabel.Text = $"Suppressed component in configuration: {copiedConfig.Name}";
             // 
             // replacementComponentLabel
             // 
@@ -687,7 +714,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.replacementComponentLabel.Name = "replacementComponentLabel";
             this.replacementComponentLabel.Size = new System.Drawing.Size(92, 13);
             this.replacementComponentLabel.TabIndex = 3;
-            this.replacementComponentLabel.Text = "Replace  in   with ";
+            this.replacementComponentLabel.Text = "Please select component to replace";
             // 
             // addReplacementLabel
             // 
@@ -714,15 +741,17 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.runButton.TabIndex = 6;
             this.runButton.Text = "Copy Display States";
             this.runButton.UseVisualStyleBackColor = true;
+            this.runButton.Click += new System.EventHandler(this.RunButtonClicked);
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(591, 654);
+            this.cancelButton.Location = new System.Drawing.Point(701, 643);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 7;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.CancelButtonClicked);
             // 
             // addReplacementButton
             // 
@@ -732,33 +761,26 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.addReplacementButton.TabIndex = 9;
             this.addReplacementButton.Text = "Add Replacement";
             this.addReplacementButton.UseVisualStyleBackColor = true;
+            this.addReplacementButton.Click += new System.EventHandler(this.AddReplacementButtonClicked);
             // 
             // deleteReplacementRow
             // 
             this.deleteReplacementRow.Location = new System.Drawing.Point(27, 654);
             this.deleteReplacementRow.Name = "deleteReplacementRow";
-            this.deleteReplacementRow.Size = new System.Drawing.Size(75, 23);
+            this.deleteReplacementRow.Size = new System.Drawing.Size(118, 23);
             this.deleteReplacementRow.TabIndex = 10;
-            this.deleteReplacementRow.Text = "Delete Replacement";
+            this.deleteReplacementRow.Text = "Delete Selected Rows";
             this.deleteReplacementRow.UseVisualStyleBackColor = true;
-            // 
-            // runWithoutThisFormLabel
-            // 
-            this.runWithoutThisFormLabel.Location = new System.Drawing.Point(701, 643);
-            this.runWithoutThisFormLabel.Name = "runWithoutThisFormLabel";
-            this.runWithoutThisFormLabel.Size = new System.Drawing.Size(113, 45);
-            this.runWithoutThisFormLabel.TabIndex = 11;
-            this.runWithoutThisFormLabel.Text = "Run Without Replacement Parts";
-            this.runWithoutThisFormLabel.UseVisualStyleBackColor = true;
+            this.deleteReplacementRow.Click += new System.EventHandler(this.DeleteReplacementRowButtonClicked);
             // 
             // deleteReplacementLabel
             // 
             this.deleteReplacementLabel.AutoSize = true;
-            this.deleteReplacementLabel.Location = new System.Drawing.Point(24, 614);
+            this.deleteReplacementLabel.Location = new System.Drawing.Point(24, 638);
             this.deleteReplacementLabel.Name = "deleteReplacementLabel";
-            this.deleteReplacementLabel.Size = new System.Drawing.Size(41, 13);
+            this.deleteReplacementLabel.Size = new System.Drawing.Size(284, 13);
             this.deleteReplacementLabel.TabIndex = 12;
-            this.deleteReplacementLabel.Text = "werwer";
+            this.deleteReplacementLabel.Text = "If rows in the table are selected, this button will delete them";
             // 
             // ReplaceSuppressedComponentsForm
             // 
@@ -766,7 +788,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(977, 700);
             this.Controls.Add(this.deleteReplacementLabel);
-            this.Controls.Add(this.runWithoutThisFormLabel);
             this.Controls.Add(this.deleteReplacementRow);
             this.Controls.Add(this.addReplacementButton);
             this.Controls.Add(this.cancelButton);
@@ -795,9 +816,78 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button addReplacementButton;
         private System.Windows.Forms.Button deleteReplacementRow;
-        private System.Windows.Forms.Button runWithoutThisFormLabel;
         private System.Windows.Forms.Label deleteReplacementLabel;
 
         #endregion
+
+        public void AddItemToCombobox(string itemToAdd, string comboBoxToAddTo) {
+            switch (comboBoxToAddTo.ToUpper()) {
+                case "SUPPRESSED COMPONENTS":
+                    suppressedComponentComboBox.Items.Add(itemToAdd);
+                    break;
+                case "REPLACEMENT COMPONENTS":
+                    ReplacementComponentComboBox.Items.Add(itemToAdd);
+                    break;
+                default:
+                    throw new ArgumentException("Combo box string must be either \"Suppressed Components\" or \"Replacement Components\"");
+            }
+        }
+
+        public void GetTableData(ref Dictionary<string, string> dictToAddTo) {
+            for (int i = 0; i < suppressionTable.RowCount - 1; i++) {
+                dictToAddTo.Add(this.suppressionTable.Rows[i].Cells[1].Value.ToString(), this.suppressionTable.Rows[i].Cells[2].Value.ToString());
+            }
+        }
+
+        private void AddReplacementButtonClicked(object sender, EventArgs e) {
+            if (rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())) {
+                debugger.WriteLine(
+                    $"{DateTime.Now}: \tTesting ---> suppressedComponentComboBox.SelectedItem.ToString(): {suppressedComponentComboBox.SelectedItem.ToString()}, \n\t\trowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString()): {rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())}\n\t\trowItems[suppressedComponentComboBox.SelectedItem.ToString()]: {rowItems[suppressedComponentComboBox.SelectedItem.ToString()]}, row count: {suppressionTable.RowCount - 2}");
+                debugger.WriteLine($"{DateTime.Now}: Item at row {rowItems[suppressedComponentComboBox.SelectedItem.ToString()]}: {suppressionTable.Rows[rowItems[suppressedComponentComboBox.SelectedItem.ToString()]].Cells[0]}, {suppressionTable.Rows[rowItems[suppressedComponentComboBox.SelectedItem.ToString()]].Cells[1]}, {suppressionTable.Rows[rowItems[suppressedComponentComboBox.SelectedItem.ToString()]].Cells[2]}");
+            }
+
+            if (rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())) {
+               this.suppressionTable.Rows.RemoveAt(rowItems[suppressedComponentComboBox.SelectedItem.ToString()]);
+               rowItems.Remove(suppressedComponentComboBox.SelectedItem.ToString());
+            }
+            
+            this.suppressionTable.Rows.Add(new object[] {
+                suppressionTable.Rows.Count.ToString(),
+                suppressedComponentComboBox.SelectedItem.ToString(),
+                ReplacementComponentComboBox.SelectedItem.ToString()
+            });
+            rowItems.Add(suppressedComponentComboBox.SelectedItem.ToString(), suppressionTable.RowCount - 2);
+            debugger.WriteLine($"{DateTime.Now}: Adding ---> {suppressedComponentComboBox.SelectedItem.ToString()}, {suppressionTable.RowCount - 2}");
+        }
+
+        private void DeleteReplacementRowButtonClicked(object sender, EventArgs e) {
+            //int count = suppressionTable.SelectedRows.Count;
+            if (this.suppressionTable.SelectedRows.Count > 0 && this.suppressionTable.SelectedRows[0].Index != this.suppressionTable.Rows.Count - 1) {
+                rowItems.Remove(this.suppressionTable.SelectedRows[0].ToString());
+                this.suppressionTable.Rows.RemoveAt(this.suppressionTable.SelectedRows[0].Index);
+            }
+            /*
+            for (int i = 0; i < suppressionTable.Rows.Count; i++) {
+                if (suppressionTable.Rows[i].Cells[0].Value.ToString().Equals(i.ToString())) {
+                    suppressionTable.Rows[i].Cells[0].Value = i;
+                }
+            }*/
+        }
+
+        private void CancelButtonClicked(object sender, EventArgs e) {
+            UserQuit = true;
+            this.Close();
+        }
+
+        private void RunButtonClicked(object sender, EventArgs e) {
+
+            this.Close();
+        }
+
+        private void SuppressedComponentComboBoxSelectedIndexChanged(object sender, EventArgs e) {
+            this.replacementComponentLabel.Text = $"Replace {suppressedComponentComboBox.SelectedText.ToUpper()} in {copiedConfig.Name} with: ";
+        }
     }
+
+    
 }

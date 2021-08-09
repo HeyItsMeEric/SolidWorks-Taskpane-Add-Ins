@@ -24,7 +24,9 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             InitializeComponent();
         }
 
-        
+        private Button generateStandardViewsButton;
+
+
 
 
         /// <summary> 
@@ -51,7 +53,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// </summary>
         private void InitializeComponent() {
             this.taskpaneCopyDisplayStatesButton = new System.Windows.Forms.Button();
-            this.CDSBArtist = new System.Windows.Forms.Label();
+            this.generateStandardViewsButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // taskpaneCopyDisplayStatesButton
@@ -65,31 +67,31 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             this.taskpaneCopyDisplayStatesButton.UseVisualStyleBackColor = true;
             this.taskpaneCopyDisplayStatesButton.Click += new System.EventHandler(this.CopyDisplayStatesButtonClicked);
             // 
-            // CDSBArtist
+            // generateStandardViewsButton
             // 
-            this.CDSBArtist.AutoSize = true;
-            this.CDSBArtist.Location = new System.Drawing.Point(3, 58);
-            this.CDSBArtist.Name = "CDSBArtist";
-            this.CDSBArtist.Size = new System.Drawing.Size(130, 13);
-            this.CDSBArtist.TabIndex = 1;
-            this.CDSBArtist.Text = "Created by Eric Gustafson";
+            this.generateStandardViewsButton.Location = new System.Drawing.Point(15, 60);
+            this.generateStandardViewsButton.Margin = new System.Windows.Forms.Padding(2);
+            this.generateStandardViewsButton.Name = "generateStandardViewsButton";
+            this.generateStandardViewsButton.Size = new System.Drawing.Size(118, 46);
+            this.generateStandardViewsButton.TabIndex = 1;
+            this.generateStandardViewsButton.Text = "Generate Standard Views";
+            this.generateStandardViewsButton.UseVisualStyleBackColor = true;
+            this.generateStandardViewsButton.Click += new System.EventHandler(this.generateStandardViewsButton_Click);
             // 
             // TaskpaneAddInManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.CDSBArtist);
+            this.Controls.Add(this.generateStandardViewsButton);
             this.Controls.Add(this.taskpaneCopyDisplayStatesButton);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "TaskpaneAddInManager";
             this.Size = new System.Drawing.Size(333, 659);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         private System.Windows.Forms.Button taskpaneCopyDisplayStatesButton;
-        private Label CDSBArtist;
         #endregion
 
         /// <summary>
@@ -102,13 +104,18 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             Application.EnableVisualStyles();
             //Application.SetCompatibleTextRenderingDefault(false);
 
-            //ensuring that the current open model is an assembly or part document
-            if (((ModelDoc2)TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc).GetType() == (int)swDocumentTypes_e.swDocDRAWING) {
+            //ensuring that the current open model is an assembly or part document (but only if a file is open)
+            if (TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc != null && ((ModelDoc2)TaskpaneExtensionsAddIn.mySolidWorks.ActiveDoc).GetType() == (int)swDocumentTypes_e.swDocDRAWING) {
                 MessageBox.Show("This function can only be used with assembly and part files!",
                     "Invalid Document Type", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } else {
                 Application.Run(new CopyDisplayStatesForm());
             }
+        }
+
+        private void generateStandardViewsButton_Click(object sender, EventArgs e) {
+            int macroError;
+            bool macroRunStatus = TaskpaneExtensionsAddIn.mySolidWorks.RunMacro2(@"\\orion\manuf_test\SolidWorks Add-In Code\VBA Macros (.swp)\Create Standard Views.swp", "", "main", (int) swRunMacroOption_e.swRunMacroUnloadAfterRun, out macroError);
         }
     }
 
@@ -235,7 +242,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         [ComUnregisterFunction()]
         private static void COMUnregister(Type t) {
             //Deletes subkey in RegEdit
-            Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree($@"SOFTWARE\SolidWorks\AddIns\{t.GUID:b}");
+            Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree($@"SOFTWARE\SolidWorks\AddIns\{t.GUID:b}"); //GUID is formatted in binary
         }
         #endregion
     }

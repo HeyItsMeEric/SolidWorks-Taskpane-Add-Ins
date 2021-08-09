@@ -7,17 +7,40 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SolidWorks.Interop.sldworks;
+using SolidWorks.Interop.swconst;
 
 
 namespace SolidWorks_WinForm_Creation {
     class ReplaceSuppressedComponentsForm : Form {
+        private Configuration copiedConfig;
+        private Configuration pastedConfig;
+        private Dictionary<string, int> rowItems; //<key, value> = <string, int> = <suppressed component name, row index>
+        public bool UserQuit { get; set; } = false;
 
-        public ReplaceSuppressedComponentsForm() {
+        public ReplaceSuppressedComponentsForm(Configuration copiedConfig, Configuration pastedConfig, string documentName) {
+            this.copiedConfig = copiedConfig;
+            this.pastedConfig = pastedConfig;
+            this.rowItems = new Dictionary<string, int>();
             InitializeComponent();
-
+            InitializeTable(documentName);
+            suppressionTable.AutoResizeColumns();
             //Centering the Form in the middle of the screen
             this.Location = new System.Drawing.Point((Screen.FromControl(this).Bounds.Width - this.Width) / 2,
                 (Screen.FromControl(this).Bounds.Height / 7));
+        }
+
+        private void InitializeTable(string documentName) {
+            this.suppressionTable.ColumnCount = 3;
+            this.suppressionTable.Columns[0].Name = "Index";
+            this.suppressionTable.Columns[1].Name = $"Suppressed Component in {documentName}";
+            this.suppressionTable.Columns[2].Name = "Component to replace the suppressed component with";
+
+            this.suppressionTable.Columns[0].Width = 50;
+            this.suppressionTable.Columns[1].Width = this.suppressionTable.Columns[2].Width = suppressionTable.Width / 2 - this.suppressionTable.Columns[0].Width;
+            this.suppressionTable.Columns[0].Resizable = this.suppressionTable.Columns[1].Resizable =
+                this.suppressionTable.Columns[2].Resizable = DataGridViewTriState.False;
+            this.suppressionTable.MultiSelect = false;
         }
 
         /// <summary>
@@ -53,21 +76,25 @@ namespace SolidWorks_WinForm_Creation {
             this.cancelButton = new System.Windows.Forms.Button();
             this.addReplacementButton = new System.Windows.Forms.Button();
             this.deleteReplacementRow = new System.Windows.Forms.Button();
-            this.runWithoutThisFormLabel = new System.Windows.Forms.Button();
             this.deleteReplacementLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.suppressionTable)).BeginInit();
             this.SuspendLayout();
             // 
             // suppressedComponentComboBox
             // 
+            this.suppressedComponentComboBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.suppressedComponentComboBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.suppressedComponentComboBox.FormattingEnabled = true;
             this.suppressedComponentComboBox.Location = new System.Drawing.Point(27, 56);
             this.suppressedComponentComboBox.Name = "suppressedComponentComboBox";
             this.suppressedComponentComboBox.Size = new System.Drawing.Size(415, 21);
             this.suppressedComponentComboBox.TabIndex = 0;
+            this.suppressedComponentComboBox.SelectedIndexChanged += new System.EventHandler(this.SuppressedComponentComboBoxSelectedIndexChanged);
             // 
             // ReplacementComponentComboBox
             // 
+            this.ReplacementComponentComboBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.ReplacementComponentComboBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.ReplacementComponentComboBox.FormattingEnabled = true;
             this.ReplacementComponentComboBox.Location = new System.Drawing.Point(537, 56);
             this.ReplacementComponentComboBox.Name = "ReplacementComponentComboBox";
@@ -79,18 +106,17 @@ namespace SolidWorks_WinForm_Creation {
             this.suppressedComponentLabel.AutoSize = true;
             this.suppressedComponentLabel.Location = new System.Drawing.Point(24, 38);
             this.suppressedComponentLabel.Name = "suppressedComponentLabel";
-            this.suppressedComponentLabel.Size = new System.Drawing.Size(200, 13);
+            this.suppressedComponentLabel.Size = new System.Drawing.Size(0, 13);
             this.suppressedComponentLabel.TabIndex = 2;
-            this.suppressedComponentLabel.Text = "Suppressed component in configuration: ";
             // 
             // replacementComponentLabel
             // 
             this.replacementComponentLabel.AutoSize = true;
             this.replacementComponentLabel.Location = new System.Drawing.Point(534, 38);
             this.replacementComponentLabel.Name = "replacementComponentLabel";
-            this.replacementComponentLabel.Size = new System.Drawing.Size(92, 13);
+            this.replacementComponentLabel.Size = new System.Drawing.Size(176, 13);
             this.replacementComponentLabel.TabIndex = 3;
-            this.replacementComponentLabel.Text = "Replace  in   with ";
+            this.replacementComponentLabel.Text = "Please select component to replace";
             // 
             // addReplacementLabel
             // 
@@ -117,15 +143,17 @@ namespace SolidWorks_WinForm_Creation {
             this.runButton.TabIndex = 6;
             this.runButton.Text = "Copy Display States";
             this.runButton.UseVisualStyleBackColor = true;
+            this.runButton.Click += new System.EventHandler(this.RunButtonClicked);
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(591, 654);
+            this.cancelButton.Location = new System.Drawing.Point(701, 643);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 7;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.CancelButtonClicked);
             // 
             // addReplacementButton
             // 
@@ -135,33 +163,26 @@ namespace SolidWorks_WinForm_Creation {
             this.addReplacementButton.TabIndex = 9;
             this.addReplacementButton.Text = "Add Replacement";
             this.addReplacementButton.UseVisualStyleBackColor = true;
+            this.addReplacementButton.Click += new System.EventHandler(this.AddReplacementButtonClicked);
             // 
             // deleteReplacementRow
             // 
             this.deleteReplacementRow.Location = new System.Drawing.Point(27, 654);
             this.deleteReplacementRow.Name = "deleteReplacementRow";
-            this.deleteReplacementRow.Size = new System.Drawing.Size(75, 23);
+            this.deleteReplacementRow.Size = new System.Drawing.Size(118, 23);
             this.deleteReplacementRow.TabIndex = 10;
-            this.deleteReplacementRow.Text = "Delete Replacement";
+            this.deleteReplacementRow.Text = "Delete Selected Rows";
             this.deleteReplacementRow.UseVisualStyleBackColor = true;
-            // 
-            // runWithoutThisFormLabel
-            // 
-            this.runWithoutThisFormLabel.Location = new System.Drawing.Point(701, 643);
-            this.runWithoutThisFormLabel.Name = "runWithoutThisFormLabel";
-            this.runWithoutThisFormLabel.Size = new System.Drawing.Size(113, 45);
-            this.runWithoutThisFormLabel.TabIndex = 11;
-            this.runWithoutThisFormLabel.Text = "Run Without Replacement Parts";
-            this.runWithoutThisFormLabel.UseVisualStyleBackColor = true;
+            this.deleteReplacementRow.Click += new System.EventHandler(this.DeleteReplacementRowButtonClicked);
             // 
             // deleteReplacementLabel
             // 
             this.deleteReplacementLabel.AutoSize = true;
-            this.deleteReplacementLabel.Location = new System.Drawing.Point(24, 614);
+            this.deleteReplacementLabel.Location = new System.Drawing.Point(24, 638);
             this.deleteReplacementLabel.Name = "deleteReplacementLabel";
-            this.deleteReplacementLabel.Size = new System.Drawing.Size(41, 13);
+            this.deleteReplacementLabel.Size = new System.Drawing.Size(284, 13);
             this.deleteReplacementLabel.TabIndex = 12;
-            this.deleteReplacementLabel.Text = "werwer";
+            this.deleteReplacementLabel.Text = "If rows in the table are selected, this button will delete them";
             // 
             // ReplaceSuppressedComponentsForm
             // 
@@ -169,7 +190,6 @@ namespace SolidWorks_WinForm_Creation {
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(977, 700);
             this.Controls.Add(this.deleteReplacementLabel);
-            this.Controls.Add(this.runWithoutThisFormLabel);
             this.Controls.Add(this.deleteReplacementRow);
             this.Controls.Add(this.addReplacementButton);
             this.Controls.Add(this.cancelButton);
@@ -198,9 +218,66 @@ namespace SolidWorks_WinForm_Creation {
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button addReplacementButton;
         private System.Windows.Forms.Button deleteReplacementRow;
-        private System.Windows.Forms.Button runWithoutThisFormLabel;
         private System.Windows.Forms.Label deleteReplacementLabel;
 
         #endregion
+
+        public void AddItemToCombobox(string itemToAdd, string comboBoxToAddTo) {
+            switch (comboBoxToAddTo.ToUpper()) {
+                case "SUPPRESSED COMPONENTS":
+                    suppressedComponentComboBox.Items.Add(itemToAdd);
+                    break;
+                case "REPLACEMENT COMPONENTS":
+                    ReplacementComponentComboBox.Items.Add(itemToAdd);
+                    break;
+                default:
+                    throw new ArgumentException("Combo box string must be either \"Suppressed Components\" or \"Replacement Components\"");
+            }
+        }
+
+        public void GetTableData(ref Dictionary<string, string> dictToAddTo) {
+            for (int i = 0; i < suppressionTable.RowCount; i++) {
+                dictToAddTo.Add(this.suppressionTable.Rows[i].Cells[2].ToString(), this.suppressionTable.Rows[i].Cells[1].ToString());
+            }
+        }
+
+        private void AddReplacementButtonClicked(object sender, EventArgs e) {
+            if (rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())) {
+                this.suppressionTable.Rows.RemoveAt(rowItems[suppressedComponentComboBox.SelectedItem.ToString()]);
+            }
+            rowItems.Add(suppressedComponentComboBox.SelectedItem.ToString(), suppressionTable.Rows.Count - 1);
+            this.suppressionTable.Rows.Add(new object[] {
+                suppressionTable.Rows.Count.ToString(),
+                suppressedComponentComboBox.SelectedItem.ToString(),
+                ReplacementComponentComboBox.SelectedItem.ToString()
+            });
+        }
+
+        private void DeleteReplacementRowButtonClicked(object sender, EventArgs e) {
+            int count = suppressionTable.SelectedRows.Count;
+            if (this.suppressionTable.SelectedRows.Count > 0 && this.suppressionTable.SelectedRows[0].Index != this.suppressionTable.Rows.Count - 1) {
+                this.suppressionTable.Rows.RemoveAt(this.suppressionTable.SelectedRows[0].Index);
+            }
+            /*
+            for (int i = 0; i < suppressionTable.Rows.Count; i++) {
+                if (suppressionTable.Rows[i].Cells[0].Value.ToString().Equals(i.ToString())) {
+                    suppressionTable.Rows[i].Cells[0].Value = i;
+                }
+            }*/
+        }
+
+        private void CancelButtonClicked(object sender, EventArgs e) {
+            UserQuit = true;
+            this.Close();
+        }
+
+        private void RunButtonClicked(object sender, EventArgs e) {
+
+            this.Close();
+        }
+
+        private void SuppressedComponentComboBoxSelectedIndexChanged(object sender, EventArgs e) {
+            this.replacementComponentLabel.Text = $"Replace {suppressedComponentComboBox.SelectedText.ToUpper()} in {copiedConfig.Name} with: ";
+        }
     }
 }

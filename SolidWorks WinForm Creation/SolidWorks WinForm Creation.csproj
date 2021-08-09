@@ -34,6 +34,42 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SolidWorks.Interop.sldworks">
+      <HintPath>..\2018 lib\SolidWorks.Interop.sldworks.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.sw3dprinter">
+      <HintPath>..\2018 lib\SolidWorks.Interop.sw3dprinter.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swcommands">
+      <HintPath>..\2018 lib\SolidWorks.Interop.swcommands.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swconst">
+      <HintPath>..\2018 lib\SolidWorks.Interop.swconst.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swdimxpert">
+      <HintPath>..\2018 lib\SolidWorks.Interop.swdimxpert.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swdocumentmgr">
+      <HintPath>..\2018 lib\SolidWorks.Interop.swdocumentmgr.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swmotionstudy">
+      <HintPath>..\2018 lib\SolidWorks.Interop.swmotionstudy.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swpublished">
+      <HintPath>..\2018 lib\SolidWorks.Interop.swpublished.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.SWRoutingLib">
+      <HintPath>..\2018 lib\SolidWorks.Interop.SWRoutingLib.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -53,12 +89,6 @@
     <Compile Include="CopyDisplayStatesForm.Designer.cs">
       <DependentUpon>CopyDisplayStatesForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="WaitingForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WaitingForm.Designer.cs">
-      <DependentUpon>WaitingForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="ReplaceSuppressedComponentsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,9 +98,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="CopyDisplayStatesForm.resx">
       <DependentUpon>CopyDisplayStatesForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WaitingForm.resx">
-      <DependentUpon>WaitingForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ReplaceSuppressedComponentsForm.resx">
       <DependentUpon>ReplaceSuppressedComponentsForm.cs</DependentUpon>
