@@ -379,16 +379,14 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             if (copiedFilePath.Substring(copiedFilePath.Length - 7).ToUpper().Equals(".SLDPRT")) {
                 throw new NotImplementedException("Copying display states from parts has not yet been implemented");
             } else { //else it is an assembly
-                StreamWriter debugger =
-                    new StreamWriter(
-                        @"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New output text.txt");
-                debugger.AutoFlush = true;
+               // StreamWriter debugger =new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New output text.txt");
+               // debugger.AutoFlush = true;
                 try {
-                    CopyDisplayStatesFromAssemblies(ref debugger);
+                    CopyDisplayStatesFromAssemblies();
                 } catch (Exception ex) {
-                    debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
+                //    debugger.WriteLine($"{DateTime.Now}: {ex.ToString()}");
                 } finally {
-                    debugger.Close();
+                //    debugger.Close();
                 }
             }
         }
@@ -407,8 +405,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="debugger"></param>
-        private void CopyDisplayStatesFromAssemblies(ref StreamWriter debugger) {
+        private void CopyDisplayStatesFromAssemblies() {
             //get the configurations we're copying display states from and too
             Configuration copiedConfig = (Configuration)copiedDoc.GetConfigurationByName(copiedConfigComboBox.SelectedItem.ToString());
             Configuration pastedConfig = (Configuration)pastedDoc.GetConfigurationByName(pastedConfigComboBox.SelectedItem.ToString());
@@ -418,38 +415,35 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             copiedDoc.ShowConfiguration2(copiedConfig.Name); //show copied config
             copiedConfig.ApplyDisplayState(copiedDisplayStateNames[0]); //show any display state (array is guaranteed to have index 0)
             Dictionary<string, int> dictOfSuppressionStates = new Dictionary<string, int>();
-            GetSuppressionStates(copiedConfig.GetRootComponent3(true).GetChildren(), ref debugger);
+            GetSuppressionStates(copiedConfig.GetRootComponent3(true).GetChildren());
 
             //Search through the pasted configuration for a list of all parts
             pastedDoc.ShowConfiguration2(pastedConfig.Name);
             ReplaceSuppressedComponentsForm replaceForm = new ReplaceSuppressedComponentsForm(copiedConfig, pastedConfig, copiedDoc.GetTitle());
-            GetComponents(pastedConfig.GetRootComponent3(true).GetChildren(), ref debugger);
+            GetComponents(pastedConfig.GetRootComponent3(true).GetChildren());
             foreach (string name in dictOfSuppressionStates.Keys) {
                 replaceForm.AddItemToCombobox(name, "Suppressed Components");
             }
             Dictionary<string, string> suppressedComponentReplacement = new Dictionary<string, string>(); //<k, v> = <name of component in pastedDoc, name of component to apply visibility of>
             replaceForm.ShowDialog();
             replaceForm.GetTableData(ref suppressedComponentReplacement);
-            foreach (string s in suppressedComponentReplacement.Keys) {
-                debugger.WriteLine(s);
-            }
             if (replaceForm.UserQuit) return;
 
 
             Component2 tempCompSup;
-            void GetSuppressionStates(object[] children, ref StreamWriter debugger2) {
+            void GetSuppressionStates(object[] children) {
                 foreach (object component in children) {
                     tempCompSup = (Component2)component;
                     if (tempCompSup.GetSuppression() == (int) swComponentSuppressionState_e.swComponentSuppressed) {  //if the component is suppressed then add it
                         dictOfSuppressionStates.Add(tempCompSup.Name2, tempCompSup.GetSuppression());
                     } else if (IsAssemblyFile(tempCompSup)) { //if the component is NOT suppressed and is an assembly file, then go deeper.
-                        GetSuppressionStates(tempCompSup.GetChildren(), ref debugger2);
+                        GetSuppressionStates(tempCompSup.GetChildren());
                     }
                 }
             }
 
             Component2 tempCompSup2;
-            void GetComponents(object[] children, ref StreamWriter debugger2) {
+            void GetComponents(object[] children) {
                 foreach (object component in children) {
                     tempCompSup2 = (Component2) component;
                     if (tempCompSup2.GetSuppression() == (int) swComponentSuppressionState_e.swComponentSuppressed) {
@@ -458,7 +452,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                         }
                     } else if (IsAssemblyFile(tempCompSup2)) { //if not suppressed and an assembly file
                         replaceForm.AddItemToCombobox(tempCompSup2.Name2, "Replacement Components");
-                        GetComponents(tempCompSup2.GetChildren(), ref debugger2);
+                        GetComponents(tempCompSup2.GetChildren());
                     } else {
                         replaceForm.AddItemToCombobox(tempCompSup2.Name2, "Replacement Components");
                     }
@@ -484,19 +478,17 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             Dictionary<string, int> dictOfCopiedComps = new Dictionary<string, int>(); //(key, value) = <string, int> = <component name, component visibility>
             HashSet<Component2> componentsToShow = new HashSet<Component2>(); //to keep track of components that need to be made visible
             foreach (string displayStateName in copiedDisplayStateNames) { //for each display state
-                debugger.WriteLine(displayStateName.ToUpper());
                 copiedDoc.ShowConfiguration2(copiedConfig.Name); //switch to the configuration that we're copying display states from.
                 copiedConfig.ApplyDisplayState(displayStateName); //apply new display state to copy
 
                 //Get component Visibilities of copying configuration
                 object[] temp = copiedConfig.GetRootComponent3(true).GetChildren();
-                AddComponents(temp, ref debugger); //recursively add to dictOfComponents
+                AddComponents(temp); //recursively add to dictOfComponents
 
                 
                 pastedDoc.ShowConfiguration2(pastedConfig.Name); //show pasted configuration so we may create a new display state for it
                 pastedConfig.CreateDisplayState($"{displayStateName} copy"); //create a new display state in the pasted config
                 pastedConfig.ApplyDisplayState($"{displayStateName} copy"); //apply this new display state so we may apply the appropriate visibilities to its components
-                debugger.WriteLine("We got here");
                 //If we do NOT switch to the pasted configuration and stay on the copied configuration, when we go to get the components in
                 //the pasted configuration, even though we've listed the name of a pastedConfig display state, we will still be getting
                 //components and their visibilities from the active configuration (which would be the copied one).
@@ -505,7 +497,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
                 //recursively select components to be hidden by passing the root component of the pasted configuration. Any component that needs to be visible
                 //instead of hidden is added to the componentsToShow HashSet.
-                TraverseAssemblyAndSelectComponentsToBeHidden(pastedConfig.GetRootComponent3(true).GetChildren(), ref debugger);
+                TraverseAssemblyAndSelectComponentsToBeHidden(pastedConfig.GetRootComponent3(true).GetChildren());
 
                 pastedDoc.HideComponent2(); //Hide all of the selected components in this display state
                 pastedDoc.ClearSelection2(true); //Deselect all components
@@ -540,13 +532,12 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
 
 
-            void AddComponents(object[] children, ref StreamWriter debugger2) {
+            void AddComponents(object[] children) {
                 foreach (object component in children) { //traverse children
                     tempComp = (Component2)component;
-                    debugger2.WriteLine($"{DateTime.Now}: ADDING: {tempComp.Name2}");
                     if (IsAssemblyFile(tempComp) && tempComp.Visible == (int)swComponentVisibilityState_e.swComponentVisible) {  //if children[i] is an assembly file AND it is visible,
                         dictOfCopiedComps.Add(tempComp.Name2, tempComp.Visible);
-                        AddComponents(tempComp.GetChildren(), ref debugger2); //then we need to go deeper :)
+                        AddComponents(tempComp.GetChildren()); //then we need to go deeper :)
                     } else {
                         dictOfCopiedComps.Add(tempComp.Name2, tempComp.Visible);
                     }
@@ -554,22 +545,16 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
             }
 
             int visibility;
-            void TraverseAssemblyAndSelectComponentsToBeHidden(object[] children, ref StreamWriter debugger2) {
+            void TraverseAssemblyAndSelectComponentsToBeHidden(object[] children) {
                 foreach (object component in children) { //traverse children
-                    //debugger2.WriteLine($"{DateTime.Now}: EVALUATING: {((Component2)component).Name2}");
 
                     if (IsAssemblyFile((Component2)component)) {                     //if children[i] is an assembly file AND it is visible,
-                        TraverseAssemblyAndSelectComponentsToBeHidden(((Component2)component).GetChildren(), ref debugger2); //then we need to go deeper :)
+                        TraverseAssemblyAndSelectComponentsToBeHidden(((Component2)component).GetChildren()); //then we need to go deeper :)
                     }
                     //If the copiedConfig contains the current, pastedConfig's part
                     if (dictOfCopiedComps.ContainsKey(((Component2)component).Name2)) {
                         visibility = suppressedComponentReplacement.ContainsKey(((Component2)component).Name2) && dictOfCopiedComps.ContainsKey(suppressedComponentReplacement[((Component2)component).Name2]) ?
                             dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]] : dictOfCopiedComps[((Component2)component).Name2];
-                        debugger2.Write($"{DateTime.Now}: Apply Visibility {visibility} to {((Component2)component).Name2}. ");
-                        if (suppressedComponentReplacement.ContainsKey(((Component2)component).Name2) && dictOfCopiedComps.ContainsKey(suppressedComponentReplacement[((Component2)component).Name2])) {
-                            debugger2.Write($"THIS IS A REPLACEMENT PART and dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]]: {dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]]}");
-                        }
-                        debugger2.WriteLine($"\t\t{suppressedComponentReplacement.ContainsKey(((Component2)component).Name2)}\t\tand dictOfCopiedComps[((Component2)component).Name2]: {dictOfCopiedComps[((Component2)component).Name2]}");
                         if (visibility == (int) swComponentVisibilityState_e.swComponentHidden) { //if the part in the copied config is hidden, then select it to be hidden later
                             ((Component2)component).Select4(true, swSelectData, false);
                         } else { //if the part is showing, mark it to be shown later
@@ -598,24 +583,15 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
 
 
-
-
-
-    //Here we iterate through the copied Components and apply their suppression states to those common components/parts in the pasted configuration
-    //Suppressed components/parts are applied to a configuration, not specific display states; in other words, if you suppress a component in one
-    //display state, all other display states will make that component suppressed as well (this is a SolidWorks feature, not something I coded).
-    //Because of this, we only want to check and apply suppression states once, not for every display state.
-
+    
 
     class ReplaceSuppressedComponentsForm : Form {
         private Configuration copiedConfig;
         private Configuration pastedConfig;
         private Dictionary<string, int> rowItems; //<key, value> = <string, int> = <suppressed component name, row index>
         public bool UserQuit { get; set; } = false;
-        private StreamWriter debugger = new StreamWriter(@"C:\Users\eric.gustafson\Documents\Code\SolidWorks\bin\Release\New Text Document.txt");
 
         public ReplaceSuppressedComponentsForm(Configuration copiedConfig, Configuration pastedConfig, string documentName) {
-            debugger.AutoFlush = true;
             this.copiedConfig = copiedConfig;
             this.pastedConfig = pastedConfig;
             this.rowItems = new Dictionary<string, int>();
@@ -628,15 +604,12 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         }
 
         private void InitializeTable(string documentName) {
-            this.suppressionTable.ColumnCount = 3;
-            this.suppressionTable.Columns[0].Name = "Index";
-            this.suppressionTable.Columns[1].Name = $"Suppressed Component in {documentName}";
-            this.suppressionTable.Columns[2].Name = "Component to replace the suppressed component with";
+            this.suppressionTable.ColumnCount = 2;
+            this.suppressionTable.Columns[0].Name = $"Suppressed Component in {documentName}";
+            this.suppressionTable.Columns[1].Name = "Component to replace the suppressed component with";
 
-            this.suppressionTable.Columns[0].Width = 50;
-            this.suppressionTable.Columns[1].Width = this.suppressionTable.Columns[2].Width = suppressionTable.Width / 2 - this.suppressionTable.Columns[0].Width;
-            this.suppressionTable.Columns[0].Resizable = this.suppressionTable.Columns[1].Resizable =
-                this.suppressionTable.Columns[2].Resizable = DataGridViewTriState.False;
+            this.suppressionTable.Columns[0].Width = this.suppressionTable.Columns[1].Width = suppressionTable.Width / 2 - 10;
+            this.suppressionTable.Columns[0].Resizable = this.suppressionTable.Columns[1].Resizable = DataGridViewTriState.False;
             this.suppressionTable.MultiSelect = false;
         }
 
@@ -835,43 +808,36 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
         public void GetTableData(ref Dictionary<string, string> dictToAddTo) {
             for (int i = 0; i < suppressionTable.RowCount - 1; i++) {
-                dictToAddTo.Add(this.suppressionTable.Rows[i].Cells[1].Value.ToString(), this.suppressionTable.Rows[i].Cells[2].Value.ToString());
+                dictToAddTo.Add(this.suppressionTable.Rows[i].Cells[0].Value.ToString(), this.suppressionTable.Rows[i].Cells[1].Value.ToString());
             }
         }
 
         private void AddReplacementButtonClicked(object sender, EventArgs e) {
-            if (rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())) {
-                debugger.WriteLine(
-                    $"{DateTime.Now}: \tTesting ---> suppressedComponentComboBox.SelectedItem.ToString(): {suppressedComponentComboBox.SelectedItem.ToString()}, \n\t\trowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString()): {rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())}\n\t\trowItems[suppressedComponentComboBox.SelectedItem.ToString()]: {rowItems[suppressedComponentComboBox.SelectedItem.ToString()]}, row count: {suppressionTable.RowCount - 2}");
-                debugger.WriteLine($"{DateTime.Now}: Item at row {rowItems[suppressedComponentComboBox.SelectedItem.ToString()]}: {suppressionTable.Rows[rowItems[suppressedComponentComboBox.SelectedItem.ToString()]].Cells[0]}, {suppressionTable.Rows[rowItems[suppressedComponentComboBox.SelectedItem.ToString()]].Cells[1]}, {suppressionTable.Rows[rowItems[suppressedComponentComboBox.SelectedItem.ToString()]].Cells[2]}");
-            }
+            try {
+                if (rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())) {
 
-            if (rowItems.ContainsKey(suppressedComponentComboBox.SelectedItem.ToString())) {
-               this.suppressionTable.Rows.RemoveAt(rowItems[suppressedComponentComboBox.SelectedItem.ToString()]);
-               rowItems.Remove(suppressedComponentComboBox.SelectedItem.ToString());
+                    this.suppressionTable.Rows.RemoveAt(rowItems[suppressedComponentComboBox.SelectedItem.ToString()]);
+                    rowItems.Remove(suppressedComponentComboBox.SelectedItem.ToString());
+                }
+
+
+                this.suppressionTable.Rows.Add(new object[] {
+                    suppressedComponentComboBox.SelectedItem.ToString(),
+                    ReplacementComponentComboBox.SelectedItem.ToString()
+                });
+                suppressionTable.Rows[suppressionTable.RowCount - 2].HeaderCell.Value = $"{suppressionTable.RowCount - 2}";
+                rowItems.Add(suppressedComponentComboBox.SelectedItem.ToString(), suppressionTable.RowCount - 2);
+            } catch (NullReferenceException ex) {
+                MessageBox.Show("Please only select an item in the drop-down menu! Do NOT write in your own values!",
+                    "Problematic Operation: Write-In Value", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            
-            this.suppressionTable.Rows.Add(new object[] {
-                suppressionTable.Rows.Count.ToString(),
-                suppressedComponentComboBox.SelectedItem.ToString(),
-                ReplacementComponentComboBox.SelectedItem.ToString()
-            });
-            rowItems.Add(suppressedComponentComboBox.SelectedItem.ToString(), suppressionTable.RowCount - 2);
-            debugger.WriteLine($"{DateTime.Now}: Adding ---> {suppressedComponentComboBox.SelectedItem.ToString()}, {suppressionTable.RowCount - 2}");
         }
 
         private void DeleteReplacementRowButtonClicked(object sender, EventArgs e) {
-            //int count = suppressionTable.SelectedRows.Count;
             if (this.suppressionTable.SelectedRows.Count > 0 && this.suppressionTable.SelectedRows[0].Index != this.suppressionTable.Rows.Count - 1) {
-                rowItems.Remove(this.suppressionTable.SelectedRows[0].ToString());
+                rowItems.Remove(this.suppressionTable.SelectedRows[0].Cells[0].Value.ToString());
                 this.suppressionTable.Rows.RemoveAt(this.suppressionTable.SelectedRows[0].Index);
             }
-            /*
-            for (int i = 0; i < suppressionTable.Rows.Count; i++) {
-                if (suppressionTable.Rows[i].Cells[0].Value.ToString().Equals(i.ToString())) {
-                    suppressionTable.Rows[i].Cells[0].Value = i;
-                }
-            }*/
         }
 
         private void CancelButtonClicked(object sender, EventArgs e) {
@@ -880,7 +846,6 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
         }
 
         private void RunButtonClicked(object sender, EventArgs e) {
-
             this.Close();
         }
 
