@@ -413,8 +413,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
 
             #region Deal with suppressed component replacements
             copiedDoc.ShowConfiguration2(copiedConfig.Name); //show copied config
-            copiedConfig.ApplyDisplayState(copiedDisplayStateNames[0]); //show any display state (array is guaranteed to have index 0)
-            Dictionary<string, int> dictOfSuppressionStates = new Dictionary<string, int>();
+            Dictionary<string, int> dictOfSuppressionStates = new Dictionary<string, int>(); //(key, value) = (name of component, visibilty state)
             GetSuppressionStates(copiedConfig.GetRootComponent3(true).GetChildren());
 
             //Search through the pasted configuration for a list of all parts
@@ -554,7 +553,7 @@ namespace Gustafson.SolidWorks.TaskpaneAddIns {
                     //If the copiedConfig contains the current, pastedConfig's part
                     if (dictOfCopiedComps.ContainsKey(((Component2)component).Name2)) {
                         visibility = suppressedComponentReplacement.ContainsKey(((Component2)component).Name2) && dictOfCopiedComps.ContainsKey(suppressedComponentReplacement[((Component2)component).Name2]) ?
-                            dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]] : dictOfCopiedComps[((Component2)component).Name2];
+                            dictOfCopiedComps[suppressedComponentReplacement[((Component2)component).Name2]] : dictOfCopiedComps[((Component2)component).Name2]; //copy replacement value
                         if (visibility == (int) swComponentVisibilityState_e.swComponentHidden) { //if the part in the copied config is hidden, then select it to be hidden later
                             ((Component2)component).Select4(true, swSelectData, false);
                         } else { //if the part is showing, mark it to be shown later
